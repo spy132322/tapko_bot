@@ -3,13 +3,22 @@
 #include <iostream>
 #include "postgresql.h"
 #include "tables.cpp"
+#include <fstream>
+#include "../json.hpp"
 void check_tables(std::string &c);
+using json = nlohmann::json;
 namespace psql
 {
     // connect_string "dbname=your_db user=your_user password=your_password hostaddr=your_server port=5432"
-    DB::DB(const std::string &connect_info)
+    DB::DB()
     {
-        c_info = connect_info;
+        std::ifstream config("db.json");
+        json conf = json::parse(config);
+        config.close();
+        c_info = "dbname=" + conf["db"]["dbname"].get<std::string>() +
+                 " user=" + conf["db"]["user"].get<std::string>() +
+                 " password=" + conf["db"]["password"].get<std::string>() +
+                 " port=" + conf["db"]["port"].get<std::string>();
         check_tables(c_info);
     };
 
@@ -50,6 +59,8 @@ void check_tables(std::string &c)
             create_tables::create_dates(tr);
             std::cout << "[EE] Cannot find dates table, creating new one" << std::endl;
         }
+        tr.commit();
+        conn.close();
     }
     catch (std::exception &e)
     {

@@ -10,7 +10,7 @@ namespace psql
         std::string c_info;
 
     public:
-        DB(const std::string &connect_info);
+        DB();
     };
 };
 
