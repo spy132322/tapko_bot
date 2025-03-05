@@ -21,6 +21,22 @@ namespace psql
                  " port=" + conf["db"]["port"].get<std::string>();
         check_tables(c_info);
     };
+    // INIT нового пользователя
+    void DB::new_user(int &id, std::string &name, std::string &username){
+        try{
+        pqxx::connection conn(c_info);
+        std::cout << "[II] Adding new user to DB (" << name << " " << username << ")" << std::endl;
+        pqxx::work tr(conn);
+        tr.exec("INSERT INTO users (id) VALUES ('" + std::to_string(id) + "') ON CONFLICT(chatid) DO NOTHING;");
+        tr.exec("UPDATE users SET Username = '" + username + "' WHERE id ='" + std::to_string(id) + "';UPDATE users SET Name = '" + name + "' WHERE id ='" + std::to_string(id) + "';");
+        tr.exec("UPDATE users SET isAutosend = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
+        tr.exec("UPDATE users SET isAdmin = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
+        tr.commit();
+        conn.close();
+        } catch(pqxx::data_exception &e){
+            std::cout << "[EE] " << e.what() << std::endl;
+        }
+    }
 
 };
 // Verify Tables

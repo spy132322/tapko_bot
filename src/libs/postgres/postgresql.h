@@ -11,7 +11,7 @@ namespace psql
 
     public:
         DB();
-        void new_user(int id, std::string name, std::string)
+        void new_user(int &id, std::string &name, std::string &username);
     };
 };
 
