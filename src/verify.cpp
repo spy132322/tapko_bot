@@ -4,7 +4,13 @@ bool user_table(pqxx::work &tr)
 {
     try
     {
-        tr.
+        bool isExisting = tr.query_value<bool>(
+            R"(SELECT EXISTS (
+            SELECT 1
+            FROM pg_tables
+            WHERE schemaname = 'public' AND tablename = 'watchers'
+        );)");
+        return isExisting;
     }
     catch (std::exception &e)
     {
