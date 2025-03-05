@@ -9,10 +9,10 @@ void check_tables(std::string &c);
 using json = nlohmann::json;
 namespace psql
 {
-    // connect_string "dbname=your_db user=your_user password=your_password hostaddr=your_server port=5432"
+    
     DB::DB()
     {
-        std::ifstream config("db.json");
+        std::ifstream config("config.json");
         json conf = json::parse(config);
         config.close();
         c_info = "dbname=" + conf["db"]["dbname"].get<std::string>() +
@@ -62,7 +62,7 @@ void check_tables(std::string &c)
         tr.commit();
         conn.close();
     }
-    catch (std::exception &e)
+    catch (pqxx::data_exception &e)
     {
         std::cout << "[EE] " << e.what() << std::endl;
     }
