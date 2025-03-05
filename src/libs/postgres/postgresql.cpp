@@ -2,7 +2,7 @@
 #include <pqxx/pqxx>
 #include <iostream>
 #include "postgresql.h"
-
+#include "verify.cpp"
 namespace psql
 {
     // connect_string "dbname=your_db user=your_user password=your_password hostaddr=your_server port=5432"
@@ -21,6 +21,7 @@ void check_tables(std::string &c)
         std::cout << "[II] Connected to DB" << std::endl;
         std::cout << "[II] Verifying DB scheme" << std::endl;
         pqxx::work tr{conn};
+        verify::user_table(tr);
     }
     catch (std::exception &e)
     {
