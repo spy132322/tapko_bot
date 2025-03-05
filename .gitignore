@@ -37,3 +37,4 @@ build
 # SQL
 data
 *.sql
+.vscode
