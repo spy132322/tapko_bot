@@ -10,5 +10,5 @@
 4. Список кто дежурил ,а кто нет
 5. Автоматизация вызовов новых дежурных
 ## Libs
-1. (TgBot-cpp)[https://github.com/reo7sp/tgbot-cpp]
-2. (JSON nlohmann)[https://github.com/nlohmann/json]
+1. [TgBot-cpp](https://github.com/reo7sp/tgbot-cpp)
+2. [JSON nlohmann](https://github.com/nlohmann/json)
