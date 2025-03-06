@@ -40,8 +40,12 @@ namespace messages
     /help — Справка по использованию бота.
     /info — Информация о боте.    
 )";
-    std::string not_enough_params = R"(
+    std::string not_enough_params_add = R"(
 ⚠️ Недостаточно параметров! Правильный формат команды: /add [Имя]
 Пример: /add Козёл
 )";
+    std::string not_enough_params_del = R"(
+⚠️ Недостаточно параметров! Правильный формат команды: /del [ID]
+Пример: /del 3
+    )";
 };
