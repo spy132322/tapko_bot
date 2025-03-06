@@ -1,6 +1,7 @@
 #ifndef PSQLDB
 #include <string>
 #include <pqxx/pqxx>
+#include <vector>
 namespace psql
 {
     class DB
@@ -8,7 +9,12 @@ namespace psql
     private:
         // Данные для соеденения
         std::string c_info;
-
+        struct GuyData{
+            int id;
+            std::string Name;
+            bool isKilled;
+            bool isWas;
+        };
     public:
         // Init db class settings
         DB();
@@ -22,6 +28,8 @@ namespace psql
         void stop();
         // Add watcher
         int add(std::string name);
+        // Уч
+        std::vector<GuyData> DB::list();
     };
 };
 

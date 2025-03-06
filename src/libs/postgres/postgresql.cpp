@@ -7,10 +7,12 @@
 #include <chrono>
 #include <thread>
 #include "../json.hpp"
+#include <vector>
 bool stop = false;
 
 void check_tables(std::string &c);
 int get_aval_id();
+bool check_if_exists(std::string name);
 
 using json = nlohmann::json;
 // Read connection to commands
@@ -118,7 +120,6 @@ namespace psql
         pqxx::work tr{read_conn};
         try
         {
-
             bool result = tr.query_value<bool>("SELECT isAdmin FROM users WHERE id = " + std::to_string(id));
             tr.commit();
             return result;
@@ -129,17 +130,43 @@ namespace psql
             tr.abort();
         }
     }
-    // Добовлялка в бд дежурного
-    int add(std::string name){
+    // Дабовлялка в бд дежурного
+    int add(std::string name)
+    {
         pqxx::work tr{write_conn};
-        try {
-            int aval_id = get_aval_id();
-            tr.exec("INSERT INTO watchers (id, Name, isKilled, isWas) VALUES (" + std::to_string(aval_id) + "'" + name + "', FALSE, FALSE);");
-            tr.commit();
-        }catch(std::exception &e){
-            std::cout << "[EE] Error adding watcher: " << e.what() <<std::endl;
-            tr.abort(); 
+        try
+        {
+            if (!check_if_exists)
+            {
+                int aval_id = get_aval_id();
+                tr.exec("INSERT INTO watchers (id, Name, isKilled, isWas) VALUES (" + std::to_string(aval_id) + "'" + name + "', FALSE, FALSE);");
+                tr.commit();
+                return 0;
+            }
+            else
+            {
+                tr.commit();
+                return 1;
+            }
         }
+        catch (std::exception &e)
+        {
+            std::cout << "[EE] Error adding watcher: " << e.what() << std::endl;
+            tr.abort();
+            return 2;
+        }
+    }
+    // Читаем всех дежурных
+    std::vector<DB::GuyData> DB::list(){
+        pqxx::work tr{read_conn};
+        std::vector<DB::GuyData> result;
+        for(auto& [id, Name, isKilled, isWas] : tr.query<int, std::string, bool, bool>("")){
+            result[id].id = id;
+            result[id].Name = Name;
+            result[id].isKilled = isKilled;
+            result[id].isWas = isWas;
+        }
+        return result;
     }
 };
 // Verify Tables
@@ -187,14 +214,18 @@ void check_tables(std::string &c)
     }
 }
 // Поиск доступного id наблюдателя
-bool check_if_exists(std::string name){
-    
+bool check_if_exists(std::string name)
+{
+
     pqxx::work tr{auto_conn};
-    try{
-        bool result = tr.query_value<bool>("SELECT EXISTS (SELECT 1 FROM watchers WHERE name = '"+ name +"') AS name_exists;");
+    try
+    {
+        bool result = tr.query_value<bool>("SELECT EXISTS (SELECT 1 FROM watchers WHERE name = '" + name + "') AS name_exists;");
         tr.commit();
         return result;
-    }catch (std::exception &e){
+    }
+    catch (std::exception &e)
+    {
         std::cout << "[EE] Unable to get existment status of watcher" << std::endl;
         tr.abort();
     }
