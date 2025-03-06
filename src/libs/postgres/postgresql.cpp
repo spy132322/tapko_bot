@@ -109,6 +109,7 @@ namespace psql
             std::this_thread::sleep_for(std::chrono::seconds(10));
         }
     }
+    // Проверка на админа user тг
     bool DB::check_admin(int64_t &id)
     {
         pqxx::work tr{read_conn};
