@@ -4,12 +4,15 @@
 #include "postgresql.h"
 #include "tables.cpp"
 #include <fstream>
+#include <chrono>
+#include <thread>
 #include "../json.hpp"
 void check_tables(std::string &c);
 using json = nlohmann::json;
+pqxx::connection read_conn;
 namespace psql
 {
-    
+    // Init DB
     DB::DB()
     {
         std::ifstream config("config.json");
@@ -20,21 +23,55 @@ namespace psql
                  " password=" + conf["db"]["password"].get<std::string>() +
                  " port=" + conf["db"]["port"].get<std::string>();
         check_tables(c_info);
-    };
+    }
     // INIT нового пользователя
-    void DB::new_user(int &id, std::string &name, std::string &username){
-        try{
-        pqxx::connection conn(c_info);
-        std::cout << "[II] Adding new user to DB (" << name << " " << username << ")" << std::endl;
-        pqxx::work tr(conn);
-        tr.exec("INSERT INTO users (id) VALUES ('" + std::to_string(id) + "') ON CONFLICT(chatid) DO NOTHING;");
-        tr.exec("UPDATE users SET Username = '" + username + "' WHERE id ='" + std::to_string(id) + "';UPDATE users SET Name = '" + name + "' WHERE id ='" + std::to_string(id) + "';");
-        tr.exec("UPDATE users SET isAutosend = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
-        tr.exec("UPDATE users SET isAdmin = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
-        tr.commit();
-        conn.close();
-        } catch(pqxx::data_exception &e){
+    void DB::new_user(int64_t &id, std::string &name, std::string &username)
+    {
+        try
+        {
+            pqxx::connection conn(c_info);
+            std::cout << "[II] Adding new user to DB (" << name << " " << username << ")" << std::endl;
+            pqxx::work tr(conn);
+            tr.exec("INSERT INTO users (id) VALUES ('" + std::to_string(id) + "') ON CONFLICT(chatid) DO NOTHING;");
+            tr.exec("UPDATE users SET Username = '" + username + "' WHERE id ='" + std::to_string(id) + "';UPDATE users SET Name = '" + name + "' WHERE id ='" + std::to_string(id) + "';");
+            tr.exec("UPDATE users SET isAutosend = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
+            tr.exec("UPDATE users SET isAdmin = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
+            tr.commit();
+            conn.close();
+        }
+        catch (std::exception &e)
+        {
             std::cout << "[EE] " << e.what() << std::endl;
+        }
+    }
+    void DB::init_read_connection()
+    {
+        while (!read_conn.is_open())
+        {
+            try
+            {
+                read_conn = pqxx::connection(c_info);
+            }
+            catch (std::exception &e)
+            {
+                std::cout << "[EE] Error creating reading connection: " << e.what() << std::endl;
+                std::cout << "[EE] Retrying in 5 secconds" << std::endl;
+                std::this_thread::sleep_for(std::chrono::seconds(5));
+            }
+        }
+    }
+    bool DB::check_admin(int64_t &id)
+    {
+        try
+        {
+            pqxx::work tr{read_conn};
+            bool result = tr.query_value<bool>("SELECT isAdmin FROM users WHERE id = " + std::to_string(id));
+            tr.commit();
+            return result;
+        }
+        catch (std::exception &e)
+        {
+            std::cout << "[EE] Error getting data from DB: " << e.what() << std::endl;
         }
     }
 
@@ -78,7 +115,7 @@ void check_tables(std::string &c)
         tr.commit();
         conn.close();
     }
-    catch (pqxx::data_exception &e)
+    catch (std::exception &e)
     {
         std::cout << "[EE] " << e.what() << std::endl;
     }

@@ -10,8 +10,12 @@ namespace psql
         std::string c_info;
 
     public:
+        // Init db class settings
         DB();
-        void new_user(int &id, std::string &name, std::string &username);
+        // Add new user
+        void new_user(int64_t &id, std::string &name, std::string &username);
+        bool check_admin(int64_t &id);
+        void init_read_connection();
     };
 };
 
