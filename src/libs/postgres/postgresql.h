@@ -14,8 +14,12 @@ namespace psql
         DB();
         // Add new user
         void new_user(int64_t &id, std::string &name, std::string &username);
+        // Verify if user is admin
         bool check_admin(int64_t &id);
-        void init_read_connection();
+        // Connection watchdog
+        void connection_watchdog();
+        // Stop whiles for KILL command
+        void stop();
     };
 };
 

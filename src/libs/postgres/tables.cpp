@@ -15,7 +15,7 @@ namespace verify
                 );)");
             return isExisting;
         }
-        catch (std::exception &e)
+        catch (pqxx::data_exception &e)
         {
             std::cout << "[EE] " << e.what() << std::endl;
         }
@@ -35,7 +35,7 @@ namespace verify
                 )");
             return isExisting;
         }
-        catch (std::exception &e)
+        catch (pqxx::data_exception &e)
         {
             std::cout << "[EE] " << e.what() << std::endl;
         }
@@ -54,7 +54,7 @@ namespace verify
                 )");
             return isExisting;
         }
-        catch (std::exception &e)
+        catch (pqxx::data_exception &e)
         {
             std::cout << "[EE] " << e.what() << std::endl;
         }
@@ -69,7 +69,7 @@ namespace create_tables
         {
             tr.exec(R"(CREATE TABLE IF NOT EXISTS watchers (id INTERGER, name VARCHAR(100) NOT NULL, isKilled BOOLEAN, isWas BOOLEAN, UNIQUE("id"));)");
         }
-        catch (std::exception &e)
+        catch (pqxx::data_exception &e)
         {
             std::cout << "[EE] " << e.what() << std::endl;
         }
@@ -81,7 +81,7 @@ namespace create_tables
         {
             tr.exec(R"(CREATE TABLE IF NOT EXISTS users(id INTERGER NOT NULL,isAutosend BOOLEAN, isAdmin BOOLEAN, Username TEXT, Name TEXT, UNIQUE("id"));)");
         }
-        catch (std::exception &e)
+        catch (pqxx::data_exception &e)
         {
             std::cout << "[EE] " << e.what() << std::endl;
         }
@@ -93,7 +93,7 @@ namespace create_tables
         {
             tr.exec(R"(CREATE TABLE IF NOT EXISTS dates(date TEXT, UNIQUE("date"));)");
         }
-        catch (std::exception &e)
+        catch (pqxx::data_exception &e)
         {
             std::cout << "[EE] " << e.what() << std::endl;
         }

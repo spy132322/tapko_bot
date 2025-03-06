@@ -7,9 +7,15 @@
 #include <chrono>
 #include <thread>
 #include "../json.hpp"
+bool stop = false;
 void check_tables(std::string &c);
 using json = nlohmann::json;
+// Read connection to commands
 pqxx::connection read_conn;
+// Write connection to commands
+pqxx::connection write_conn;
+// Read // Write connection to automatics
+pqxx::connection auto_conn;
 namespace psql
 {
     // Init DB
@@ -44,34 +50,79 @@ namespace psql
             std::cout << "[EE] " << e.what() << std::endl;
         }
     }
-    void DB::init_read_connection()
+    void DB::connection_watchdog()
     {
-        while (!read_conn.is_open())
+        std::cout << "[II] Connection watchdog is up" << std::endl;
+        while (!stop)
         {
-            try
+            
+            // Соеденение для чтения комманд пользователей
+            while (!read_conn.is_open())
             {
-                read_conn = pqxx::connection(c_info);
+                try
+                {
+                    read_conn = pqxx::connection(c_info);
+                }
+                catch (pqxx::broken_connection &e)
+                {
+                    std::cout << "[EE] Error creating reading connection: " << e.what() << std::endl;
+                    std::cout << "[EE] Retrying in 5 secconds" << std::endl;
+                    std::this_thread::sleep_for(std::chrono::seconds(5));
+                }
             }
-            catch (std::exception &e)
+            // Соеденение для записи комманд пользователей
+            while (!write_conn.is_open())
             {
-                std::cout << "[EE] Error creating reading connection: " << e.what() << std::endl;
-                std::cout << "[EE] Retrying in 5 secconds" << std::endl;
-                std::this_thread::sleep_for(std::chrono::seconds(5));
+                try
+                {
+                    write_conn = pqxx::connection(c_info);
+                    if (write_conn.is_open())
+                    {
+                        std::cout << "[II] Write connection is ready" << std::endl;
+                    }
+                }
+                catch (pqxx::broken_connection &e)
+                {
+                    std::cout << "[EE] Error creating write connection: " << e.what() << std::endl;
+                    std::cout << "[EE] Retrying in 5 secconds" << std::endl;
+                    std::this_thread::sleep_for(std::chrono::seconds(5));
+                }
             }
+            // Соеденение с бд для автоматики
+            while (!auto_conn.is_open())
+            {
+                try
+                {
+                    auto_conn = pqxx::connection(c_info);
+                    if (auto_conn.is_open())
+                    {
+                        std::cout << "[II] Automatics connection is ready" << std::endl;
+                    }
+                }
+                catch (pqxx::broken_connection &e)
+                {
+                    std::cout << "[EE] Error creating automatics connection: " << e.what() << std::endl;
+                    std::cout << "[EE] Retrying in 5 secconds" << std::endl;
+                    std::this_thread::sleep_for(std::chrono::seconds(5));
+                }
+            }
+            std::this_thread::sleep_for(std::chrono::seconds(10));
         }
     }
     bool DB::check_admin(int64_t &id)
     {
+        pqxx::work tr{read_conn};
         try
         {
-            pqxx::work tr{read_conn};
+
             bool result = tr.query_value<bool>("SELECT isAdmin FROM users WHERE id = " + std::to_string(id));
             tr.commit();
             return result;
         }
-        catch (std::exception &e)
+        catch (pqxx::data_exception &e)
         {
             std::cout << "[EE] Error getting data from DB: " << e.what() << std::endl;
+            tr.abort();
         }
     }
 
@@ -115,7 +166,7 @@ void check_tables(std::string &c)
         tr.commit();
         conn.close();
     }
-    catch (std::exception &e)
+    catch (pqxx::broken_connection &e)
     {
         std::cout << "[EE] " << e.what() << std::endl;
     }
