@@ -18,12 +18,25 @@ int main()
   TgBot::Bot bot(config["bot"].get<std::string>());
   // Иннит комманд
   bot.getEvents().onCommand("start", [&bot](TgBot::Message::Ptr message)
-                            { bot.getApi().sendMessage(message->chat->id, messages::hello_message); 
-                                db.new_user(message->chat->id, message->chat->firstName, message->chat->username); });
+  { 
+    bot.getApi().sendMessage(message->chat->id, messages::hello_message); 
+    db.new_user(message->chat->id, message->chat->firstName, message->chat->username);
+  });
+  // Вывод инфо сообщения
   bot.getEvents().onCommand("info", [&bot](TgBot::Message::Ptr message){
     bot.getApi().sendMessage(message->chat->id, messages::info_message);
   });
-  bot.getEvents().onCommand("add", [&bot](TgBot::Message::Ptr){
-      
+  //Добавить дежурного в БД
+  bot.getEvents().onCommand("add", [&bot](TgBot::Message::Ptr message){
+    if (db.check_admin(message->chat->id)){
+      std::cout << "[II] " << message->chat->username << "has used add command" << std::endl;
+    if (message-> text.size() > 5){
+      std::string setting = message->text.substr(5);
+    }
+  }
+  else{
+    bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
+  }
+
   });
 }

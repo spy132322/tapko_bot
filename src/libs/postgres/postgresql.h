@@ -20,6 +20,8 @@ namespace psql
         void connection_watchdog();
         // Stop whiles for KILL command
         void stop();
+        // Add watcher
+        int add(std::string name);
     };
 };
 

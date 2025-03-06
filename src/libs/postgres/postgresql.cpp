@@ -8,7 +8,10 @@
 #include <thread>
 #include "../json.hpp"
 bool stop = false;
+
 void check_tables(std::string &c);
+int get_aval_id();
+
 using json = nlohmann::json;
 // Read connection to commands
 pqxx::connection read_conn;
@@ -33,21 +36,21 @@ namespace psql
     // INIT нового пользователя
     void DB::new_user(int64_t &id, std::string &name, std::string &username)
     {
+
+        std::cout << "[II] Adding new user to DB (" << name << " " << username << ")" << std::endl;
+        pqxx::work tr(write_conn);
         try
         {
-            pqxx::connection conn(c_info);
-            std::cout << "[II] Adding new user to DB (" << name << " " << username << ")" << std::endl;
-            pqxx::work tr(conn);
             tr.exec("INSERT INTO users (id) VALUES ('" + std::to_string(id) + "') ON CONFLICT(chatid) DO NOTHING;");
             tr.exec("UPDATE users SET Username = '" + username + "' WHERE id ='" + std::to_string(id) + "';UPDATE users SET Name = '" + name + "' WHERE id ='" + std::to_string(id) + "';");
             tr.exec("UPDATE users SET isAutosend = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
             tr.exec("UPDATE users SET isAdmin = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
             tr.commit();
-            conn.close();
         }
-        catch (std::exception &e)
+        catch (pqxx::data_exception &e)
         {
-            std::cout << "[EE] " << e.what() << std::endl;
+            std::cout << "[EE] Error adding user to db " << e.what() << std::endl;
+            tr.abort();
         }
     }
     void DB::connection_watchdog()
@@ -55,7 +58,7 @@ namespace psql
         std::cout << "[II] Connection watchdog is up" << std::endl;
         while (!stop)
         {
-            
+
             // Соеденение для чтения комманд пользователей
             while (!read_conn.is_open())
             {
@@ -126,7 +129,18 @@ namespace psql
             tr.abort();
         }
     }
-
+    // Добовлялка в бд дежурного
+    int add(std::string name){
+        pqxx::work tr{write_conn};
+        try {
+            int aval_id = get_aval_id();
+            tr.exec("INSERT INTO watchers (id, Name, isKilled, isWas) VALUES (" + std::to_string(aval_id) + "'" + name + "', FALSE, FALSE);");
+            tr.commit();
+        }catch(std::exception &e){
+            std::cout << "[EE] Error adding watcher: " << e.what() <<std::endl;
+            tr.abort(); 
+        }
+    }
 };
 // Verify Tables
 void check_tables(std::string &c)
@@ -170,5 +184,46 @@ void check_tables(std::string &c)
     catch (pqxx::broken_connection &e)
     {
         std::cout << "[EE] " << e.what() << std::endl;
+    }
+}
+// Поиск доступного id наблюдателя
+bool check_if_exists(std::string name){
+    
+    pqxx::work tr{auto_conn};
+    try{
+        bool result = tr.query_value<bool>("SELECT EXISTS (SELECT 1 FROM watchers WHERE name = '"+ name +"') AS name_exists;");
+        tr.commit();
+        return result;
+    }catch (std::exception &e){
+        std::cout << "[EE] Unable to get existment status of watcher" << std::endl;
+        tr.abort();
+    }
+}
+// Поиск доступного id
+int get_aval_id()
+{
+    pqxx::work tr{auto_conn};
+    try
+    {
+        int id = tr.query_value<int>(R"(
+WITH RECURSIVE available_id AS (
+    SELECT 0 AS id -- Начинаем с 0
+    UNION ALL
+    SELECT id + 1
+    FROM available_id
+    WHERE id + 1 NOT IN (SELECT id FROM users)
+    AND id < (SELECT MAX(id) FROM users) -- Ограничиваем максимальным id
+)
+SELECT id FROM available_id
+ORDER BY id
+LIMIT 1;
+)");
+        tr.commit();
+        return id;
+    }
+    catch (std::exception &e)
+    {
+        std::cout << "[EE] Getting max id of watcher error:  " << e.what() << std::endl;
+        tr.abort();
     }
 }
