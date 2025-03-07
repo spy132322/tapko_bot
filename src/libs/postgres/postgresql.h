@@ -10,10 +10,10 @@ namespace psql
         // Данные для соеденения
         std::string c_info;
         struct GuyData{
-            int id;
-            std::string Name;
-            bool isKilled;
-            bool isWas;
+            int id = -1;
+            std::string Name = "";
+            bool isKilled = false;
+            bool isWas = false;
         };
     public:
         // Init db class settings
@@ -22,13 +22,11 @@ namespace psql
         void new_user(int64_t &id, std::string &name, std::string &username);
         // Verify if user is admin
         bool check_admin(int64_t &id);
-        // Connection watchdog
-        void connection_watchdog();
         // Stop whiles for KILL command
         void stop();
         // Add watcher
         int add(std::string name);
-        // Уч
+        // List дежурных
         std::vector<GuyData> list();
     };
 };

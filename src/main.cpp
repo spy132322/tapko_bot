@@ -8,13 +8,11 @@
 #include <tgbot/tgbot.h>
 using json = nlohmann::json;
 psql::DB db;
-
-void run_wd();
-std::thread db_wd(run_wd);
 bool is_safe_input(const std::string &input);
 
 int main()
 {
+  std::cout << "going in main" << std::endl;
   std::this_thread::sleep_for(std::chrono::seconds(2));
   // Импортируем ключ бота
   std::ifstream conf("config.json");
@@ -71,18 +69,19 @@ int main()
   // Список Дежурных
   bot.getEvents().onCommand("list", [&bot](TgBot::Message::Ptr message){
     std::vector<std::string> list;
-    list[0] = "📋 Список дежурных:";
+    list[0] = "📋 Список дежурных:";      
     for (auto& Guy : db.list()){
       if(Guy.isKilled){
         list.push_back(std::to_string(Guy.id) + ". " + Guy.Name + " 🔴 (Не доступен)");
       }
-      else if(Guy.isWas){
+      else if(Guy.isWas and !Guy.isKilled){
         list.push_back(std::to_string(Guy.id) + ". " + Guy.Name + " 🟢 (Доступен)  | Дежурил: ✅");
       } 
       else if(!Guy.isKilled and !Guy.isWas){
         list.push_back(std::to_string(Guy.id) + ". " + Guy.Name + " 🟢 (Доступен)  | Дежурил: ❌");
       }
-    }
+    
+  }
     std::string message_to = "";
     for (std::string strm : list){
       message_to = message_to + strm + "\n";
@@ -111,7 +110,7 @@ int main()
     }
     else if (is_safe_input(message->text.substr(5)))
     {
-      std::cout << "[WW] " << message->chat->username << "Tried to use SQL injection" << std::endl;
+      std::cout << "[WW] " << message->chat->username << " Tried to use SQL injection" << std::endl;
       bot.getApi().sendMessage(message->chat->id, "Nice try. Hah)");
     }
     else{
@@ -145,7 +144,4 @@ bool is_safe_input(const std::string &input) {
   }
 
   return true;
-}
-void run_wd(){
-  db.connection_watchdog();
 }

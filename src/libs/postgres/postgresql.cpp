@@ -8,19 +8,15 @@
 #include <thread>
 #include "../json.hpp"
 #include <vector>
+#include <memory>
 bool stop_s = false;
 
 void check_tables(std::string &c);
-int get_aval_id();
-bool check_if_exists(std::string name);
-
+int get_aval_id(pqxx::connection &conn);
+bool check_if_exists(std::string name, pqxx::connection &conn);
+bool check_user_if_exists(int64_t &id, pqxx::connection &c);
 using json = nlohmann::json;
-// Read connection to commands
-pqxx::connection read_conn;
-// Write connection to commands
-pqxx::connection write_conn;
-// Read // Write connection to automatics
-pqxx::connection auto_conn;
+
 namespace psql
 {
     // Init DB
@@ -32,146 +28,128 @@ namespace psql
         c_info = "dbname=" + conf["db"]["dbname"].get<std::string>() +
                  " user=" + conf["db"]["user"].get<std::string>() +
                  " password=" + conf["db"]["password"].get<std::string>() +
-                 " port=" + conf["db"]["port"].get<std::string>()+
+                 " port=" + conf["db"]["port"].get<std::string>() +
                  " host=" + conf["db"]["host"].get<std::string>();
         check_tables(c_info);
     }
     // INIT нового пользователя
     void DB::new_user(int64_t &id, std::string &name, std::string &username)
     {
-
-        std::cout << "[II] Adding new user to DB (" << name << " " << username << ")" << std::endl;
-        pqxx::work tr(write_conn);
         try
         {
-            tr.exec("INSERT INTO users (id) VALUES ('" + std::to_string(id) + "') ON CONFLICT(chatid) DO NOTHING;");
-            tr.exec("UPDATE users SET Username = '" + username + "' WHERE id ='" + std::to_string(id) + "';UPDATE users SET Name = '" + name + "' WHERE id ='" + std::to_string(id) + "';");
-            tr.exec("UPDATE users SET isAutosend = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
-            tr.exec("UPDATE users SET isAdmin = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
-            tr.commit();
+            pqxx::connection conn(c_info);
+            if (!check_user_if_exists(id, conn))
+            {
+                std::cout << "[II] Adding new user to DB (" << name << " " << username << ")" << std::endl;
+                pqxx::work tr{conn};
+
+                tr.exec("INSERT INTO users (id) VALUES ('" + std::to_string(id) + "') ON CONFLICT(id) DO NOTHING;");
+                tr.exec("UPDATE users SET Username = '" + username + "' WHERE id ='" + std::to_string(id) + "';UPDATE users SET Name = '" + name + "' WHERE id ='" + std::to_string(id) + "';");
+                tr.exec("UPDATE users SET isAutosend = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
+                tr.exec("UPDATE users SET isAdmin = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
+                tr.commit();
+            }
+            conn.close();
         }
         catch (std::exception &e)
         {
-            std::cout << "[EE] Error adding user to db " << e.what() << std::endl;
-            tr.abort();
+            std::cout << e.what() << std::endl;
         }
     }
-    void DB::connection_watchdog()
-    {
-        std::cout << "[II] Connection watchdog is up" << std::endl;
-        while (!stop_s)
-        {
-            std::cout << read_conn.is_open() << std::endl;
-            std::cout << write_conn.is_open() << std::endl;
-            std::cout << auto_conn.is_open() << std::endl;
-            // Соеденение для чтения комманд пользователей
-            while (!read_conn.is_open())
-            {
-                try
-                {   
-                    std::cout << c_info <<std::endl;
-                    read_conn = pqxx::connection(c_info);
-                }
-                catch (std::exception &e)
-                {
-                    std::cout << "[EE] Error creating reading connection: " << e.what() << std::endl;
-                    std::cout << "[EE] Retrying in 5 secconds" << std::endl;
-                    std::this_thread::sleep_for(std::chrono::seconds(5));
-                }
-            }
-            // Соеденение для записи комманд пользователей
-            while (!write_conn.is_open())
-            {
-                try
-                {
-                    write_conn = pqxx::connection(c_info);
-                    if (write_conn.is_open())
-                    {
-                        std::cout << "[II] Write connection is ready" << std::endl;
-                    }
-                }
-                catch (pqxx::broken_connection &e)
-                {
-                    std::cout << "[EE] Error creating write connection: " << e.what() << std::endl;
-                    std::cout << "[EE] Retrying in 5 secconds" << std::endl;
-                    std::this_thread::sleep_for(std::chrono::seconds(5));
-                }
-            }
-            // Соеденение с бд для автоматики
-            while (!auto_conn.is_open())
-            {
-                try
-                {
-                    auto_conn = pqxx::connection(c_info);
-                    if (auto_conn.is_open())
-                    {
-                        std::cout << "[II] Automatics connection is ready" << std::endl;
-                    }
-                }
-                catch (pqxx::broken_connection &e)
-                {
-                    std::cout << "[EE] Error creating automatics connection: " << e.what() << std::endl;
-                    std::cout << "[EE] Retrying in 5 secconds" << std::endl;
-                    std::this_thread::sleep_for(std::chrono::seconds(5));
-                }
-            }
-            std::this_thread::sleep_for(std::chrono::seconds(10));
-        }
-    }
+
     // Проверка на админа user тг
     bool DB::check_admin(int64_t &id)
     {
-        pqxx::work tr{read_conn};
         try
         {
-            bool result = tr.query_value<bool>("SELECT isAdmin FROM users WHERE id = " + std::to_string(id));
-            tr.commit();
-            return result;
+            pqxx::connection conn(c_info);
+            pqxx::work tr{conn};
+            try
+            {
+                bool result = tr.query_value<bool>("SELECT isAdmin FROM users WHERE id = " + std::to_string(id));
+                tr.commit();
+                return result;
+            }
+            catch (std::exception &e)
+            {
+                std::cout << "[EE] Error getting data from DB: " << e.what() << std::endl;
+                tr.abort();
+                return false;
+            }
         }
         catch (std::exception &e)
         {
-            std::cout << "[EE] Error getting data from DB: " << e.what() << std::endl;
-            tr.abort();
+            std::cout << "[EE] " << e.what() << std::endl;
             return false;
         }
     }
     // Дабовлялка в бд дежурного
     int DB::add(std::string name)
     {
-        pqxx::work tr{write_conn};
         try
         {
-            if (!check_if_exists)
+            pqxx::connection conn(c_info);
+            pqxx::work tr{conn};
+            try
             {
-                int aval_id = get_aval_id();
-                tr.exec("INSERT INTO watchers (id, Name, isKilled, isWas) VALUES (" + std::to_string(aval_id) + "'" + name + "', FALSE, FALSE);");
-                tr.commit();
-                return 0;
+                if (!check_if_exists(name, conn))
+                {
+                    int aval_id = get_aval_id(conn);
+                    tr.exec("INSERT INTO watchers (id, Name, isKilled, isWas) VALUES (" + std::to_string(aval_id) + "'" + name + "', FALSE, FALSE);");
+                    tr.commit();
+                    conn.close();
+                    return 0;
+                }
+                else
+                {
+                    tr.commit();
+                    conn.close();
+                    return 1;
+                }
             }
-            else
+            catch (std::exception &e)
             {
-                tr.commit();
-                return 1;
+                std::cout << "[EE] Error adding watcher: " << e.what() << std::endl;
+                tr.abort();
+                conn.close();
+                return 2;
             }
         }
         catch (std::exception &e)
         {
-            std::cout << "[EE] Error adding watcher: " << e.what() << std::endl;
-            tr.abort();
+            std::cout << "[EE] " << e.what() << std::endl;
             return 2;
         }
     }
     // Читаем всех дежурных
-    std::vector<DB::GuyData> DB::list(){
-        pqxx::work tr{read_conn};
+    std::vector<DB::GuyData> DB::list()
+    {
         std::vector<DB::GuyData> result;
-        for(auto& [id, Name, isKilled, isWas] : tr.query<int, std::string, bool, bool>("")){
-            result[id].id = id;
-            result[id].Name = Name;
-            result[id].isKilled = isKilled;
-            result[id].isWas = isWas;
+        try
+        {
+            pqxx::connection conn(c_info);
+            pqxx::work tr{conn};
+
+            for (auto &[id, Name, isKilled, isWas] : tr.query<int, std::string, bool, bool>("SELECT * FROM watchers;"))
+            {
+                result[id].id = id;
+                result[id].Name = Name;
+                result[id].isKilled = isKilled;
+                result[id].isWas = isWas;
+            }
+            tr.commit();
+            conn.close();
+            return result;
         }
-        return result;
+        catch (std::exception &e)
+        {
+            std::cout << "[EE] " << e.what() << std::endl;
+            result[0].id = 0;
+            result[0].Name = "[EE] Error reading DB";
+            result[0].isKilled = true;
+            result[0].isWas = true;
+            return result;
+        }
     }
 };
 // Verify Tables
@@ -194,7 +172,7 @@ void check_tables(std::string &c)
         }
         if (verify::wch_table(tr))
         {
-            std::cout << "[II] User tables exists" << std::endl;
+            std::cout << "[II] Watchers tables exists" << std::endl;
         }
         else
         {
@@ -213,16 +191,15 @@ void check_tables(std::string &c)
         tr.commit();
         conn.close();
     }
-    catch (pqxx::broken_connection &e)
+    catch (std::exception &e)
     {
         std::cout << "[EE] " << e.what() << std::endl;
     }
 }
 // Поиск доступного id наблюдателя
-bool check_if_exists(std::string name)
+bool check_if_exists(std::string name, pqxx::connection &conn)
 {
-
-    pqxx::work tr{auto_conn};
+    pqxx::work tr{conn};
     try
     {
         bool result = tr.query_value<bool>("SELECT EXISTS (SELECT 1 FROM watchers WHERE name = '" + name + "') AS name_exists;");
@@ -236,10 +213,28 @@ bool check_if_exists(std::string name)
         return true;
     }
 }
-// Поиск доступного id
-int get_aval_id()
+bool check_user_if_exists(int64_t &id, pqxx::connection &c)
 {
-    pqxx::work tr{auto_conn};
+    pqxx::work tr{c};
+    try
+    {
+
+        bool result = tr.query_value<bool>("SELECT EXISTS (SELECT 1 FROM users WHERE id = '" + std::to_string(id) + "') AS name_exists;");
+
+        tr.commit();
+        return result;
+    }
+    catch (std::exception &e)
+    {
+        std::cout << "[EE] Unable to get existment status of user" << std::endl;
+        tr.abort();
+        return true;
+    }
+}
+// Поиск доступного id
+int get_aval_id(pqxx::connection &conn)
+{
+    pqxx::work tr{conn};
     try
     {
         int id = tr.query_value<int>(R"(
