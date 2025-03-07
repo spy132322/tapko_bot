@@ -8,9 +8,14 @@
 #include <tgbot/tgbot.h>
 using json = nlohmann::json;
 psql::DB db;
+
+void run_wd();
+std::thread db_wd(run_wd);
 bool is_safe_input(const std::string &input);
+
 int main()
 {
+  std::this_thread::sleep_for(std::chrono::seconds(2));
   // Импортируем ключ бота
   std::ifstream conf("config.json");
   json config = json::parse(conf);
@@ -118,6 +123,17 @@ int main()
   }
   
   });
+  try {
+    printf("Bot username: %s\n", bot.getApi().getMe()->username.c_str());
+    TgBot::TgLongPoll longPoll(bot);
+    while (true) {
+        printf("Long poll started\n");
+        longPoll.start();
+    }
+} catch (TgBot::TgException& e) {
+    printf("error: %s\n", e.what());
+}
+return 0;
 }
 bool is_safe_input(const std::string &input) {
   // Регулярное выражение для проверки на опасные символы
@@ -129,4 +145,7 @@ bool is_safe_input(const std::string &input) {
   }
 
   return true;
+}
+void run_wd(){
+  db.connection_watchdog();
 }

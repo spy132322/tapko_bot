@@ -29,7 +29,7 @@ namespace psql
         // Add watcher
         int add(std::string name);
         // Уч
-        std::vector<GuyData> DB::list();
+        std::vector<GuyData> list();
     };
 };
 

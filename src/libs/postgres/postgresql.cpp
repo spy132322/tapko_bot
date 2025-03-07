@@ -8,7 +8,7 @@
 #include <thread>
 #include "../json.hpp"
 #include <vector>
-bool stop = false;
+bool stop_s = false;
 
 void check_tables(std::string &c);
 int get_aval_id();
@@ -32,7 +32,8 @@ namespace psql
         c_info = "dbname=" + conf["db"]["dbname"].get<std::string>() +
                  " user=" + conf["db"]["user"].get<std::string>() +
                  " password=" + conf["db"]["password"].get<std::string>() +
-                 " port=" + conf["db"]["port"].get<std::string>();
+                 " port=" + conf["db"]["port"].get<std::string>()+
+                 " host=" + conf["db"]["host"].get<std::string>();
         check_tables(c_info);
     }
     // INIT нового пользователя
@@ -49,7 +50,7 @@ namespace psql
             tr.exec("UPDATE users SET isAdmin = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
             tr.commit();
         }
-        catch (pqxx::data_exception &e)
+        catch (std::exception &e)
         {
             std::cout << "[EE] Error adding user to db " << e.what() << std::endl;
             tr.abort();
@@ -58,17 +59,20 @@ namespace psql
     void DB::connection_watchdog()
     {
         std::cout << "[II] Connection watchdog is up" << std::endl;
-        while (!stop)
+        while (!stop_s)
         {
-
+            std::cout << read_conn.is_open() << std::endl;
+            std::cout << write_conn.is_open() << std::endl;
+            std::cout << auto_conn.is_open() << std::endl;
             // Соеденение для чтения комманд пользователей
             while (!read_conn.is_open())
             {
                 try
-                {
+                {   
+                    std::cout << c_info <<std::endl;
                     read_conn = pqxx::connection(c_info);
                 }
-                catch (pqxx::broken_connection &e)
+                catch (std::exception &e)
                 {
                     std::cout << "[EE] Error creating reading connection: " << e.what() << std::endl;
                     std::cout << "[EE] Retrying in 5 secconds" << std::endl;
@@ -124,14 +128,15 @@ namespace psql
             tr.commit();
             return result;
         }
-        catch (pqxx::data_exception &e)
+        catch (std::exception &e)
         {
             std::cout << "[EE] Error getting data from DB: " << e.what() << std::endl;
             tr.abort();
+            return false;
         }
     }
     // Дабовлялка в бд дежурного
-    int add(std::string name)
+    int DB::add(std::string name)
     {
         pqxx::work tr{write_conn};
         try
@@ -228,6 +233,7 @@ bool check_if_exists(std::string name)
     {
         std::cout << "[EE] Unable to get existment status of watcher" << std::endl;
         tr.abort();
+        return true;
     }
 }
 // Поиск доступного id
@@ -256,5 +262,6 @@ LIMIT 1;
     {
         std::cout << "[EE] Getting max id of watcher error:  " << e.what() << std::endl;
         tr.abort();
+        return 10000;
     }
 }
