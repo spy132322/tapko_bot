@@ -9,11 +9,12 @@
 #include "../json.hpp"
 #include <vector>
 #include <memory>
+#include "SQL.h"
 bool stop_s = false;
 
 void check_tables(std::string &c);
-int get_aval_id(pqxx::connection &conn);
-bool check_if_exists(std::string name, pqxx::connection &conn);
+int get_aval_id(pqxx::work &tr);
+bool check_if_exists(std::string name, pqxx::work &tr);
 bool check_user_if_exists(int64_t &id, pqxx::connection &c);
 using json = nlohmann::json;
 
@@ -42,7 +43,6 @@ namespace psql
             {
                 std::cout << "[II] Adding new user to DB (" << name << " " << username << ")" << std::endl;
                 pqxx::work tr{conn};
-
                 tr.exec("INSERT INTO users (id) VALUES ('" + std::to_string(id) + "') ON CONFLICT(id) DO NOTHING;");
                 tr.exec("UPDATE users SET Username = '" + username + "' WHERE id ='" + std::to_string(id) + "';UPDATE users SET Name = '" + name + "' WHERE id ='" + std::to_string(id) + "';");
                 tr.exec("UPDATE users SET isAutosend = 'FALSE' WHERE id ='" + std::to_string(id) + "';");
@@ -89,20 +89,26 @@ namespace psql
         try
         {
             pqxx::connection conn(c_info);
-            pqxx::work tr{conn};
+            pqxx::work tr{conn}; 
             try
             {
-                if (!check_if_exists(name, conn))
+                if (!check_if_exists(name, tr))
                 {
-                    int aval_id = get_aval_id(conn);
-                    tr.exec("INSERT INTO watchers (id, Name, isKilled, isWas) VALUES (" + std::to_string(aval_id) + "'" + name + "', FALSE, FALSE);");
+                        
+                    int aval_id = get_aval_id(tr);
+                    if(aval_id != -1){
+                    tr.exec("INSERT INTO watchers (id, Name, isKilled, isWas) VALUES ('" + std::to_string(aval_id) + "','" + name + "', FALSE, FALSE);");
                     tr.commit();
                     conn.close();
                     return 0;
+                    }else{
+                        conn.close();
+                        return 2;
+                    }
                 }
                 else
                 {
-                    tr.commit();
+                    tr.abort();
                     conn.close();
                     return 1;
                 }
@@ -110,7 +116,42 @@ namespace psql
             catch (std::exception &e)
             {
                 std::cout << "[EE] Error adding watcher: " << e.what() << std::endl;
-                tr.abort();
+                conn.close();
+                return 2;
+            }
+        }
+        catch (std::exception &e)
+        {
+            std::cout << "[EE] " << e.what() << std::endl;
+            return 2;
+        }
+    }
+    // Удалить Дежурного из БД
+    int DB::del(int id)
+    {
+        try
+        {
+            pqxx::connection conn(c_info);
+            pqxx::work tr{conn}; 
+            try
+            {
+                if (check_if_exists(id, tr))
+                {
+                    tr.exec("DELETE FROM watchers WHERE id = " + std::to_string(id) + ";");
+                    tr.commit();
+                    conn.close();
+                    return 0;
+                }
+                else
+                {
+                    tr.abort();
+                    conn.close();
+                    return 1;
+                }
+            }
+            catch (std::exception &e)
+            {
+                std::cout << "[EE] Error adding watcher: " << e.what() << std::endl;
                 conn.close();
                 return 2;
             }
@@ -124,19 +165,24 @@ namespace psql
     // Читаем всех дежурных
     std::vector<DB::GuyData> DB::list()
     {
+        // List all
+
         std::vector<DB::GuyData> result;
         try
         {
             pqxx::connection conn(c_info);
             pqxx::work tr{conn};
-
-            for (auto &[id, Name, isKilled, isWas] : tr.query<int, std::string, bool, bool>("SELECT * FROM watchers;"))
+            if (tr.query_value<bool>(SQL::verify_exists_1s_tables_unit))
             {
-                result[id].id = id;
-                result[id].Name = Name;
-                result[id].isKilled = isKilled;
-                result[id].isWas = isWas;
+                for (auto &[id, Name, isKilled, isWas] : tr.query<int, std::string, bool, bool>(SQL::get_all_watchers))
+                {
+                    result.push_back({id,Name,isKilled,isWas});
+                }
             }
+            else{
+                result.push_back({0, "Список пуст", true, true});
+            }
+
             tr.commit();
             conn.close();
             return result;
@@ -144,10 +190,7 @@ namespace psql
         catch (std::exception &e)
         {
             std::cout << "[EE] " << e.what() << std::endl;
-            result[0].id = 0;
-            result[0].Name = "[EE] Error reading DB";
-            result[0].isKilled = true;
-            result[0].isWas = true;
+            result.push_back({0, "[EE] Error reading DB", true, true});
             return result;
         }
     }
@@ -196,21 +239,36 @@ void check_tables(std::string &c)
         std::cout << "[EE] " << e.what() << std::endl;
     }
 }
-// Поиск доступного id наблюдателя
-bool check_if_exists(std::string name, pqxx::connection &conn)
+// Существует ли дежурный
+bool check_if_exists(std::string name, pqxx::work &tr)
 {
-    pqxx::work tr{conn};
     try
     {
         bool result = tr.query_value<bool>("SELECT EXISTS (SELECT 1 FROM watchers WHERE name = '" + name + "') AS name_exists;");
-        tr.commit();
+        
         return result;
     }
     catch (std::exception &e)
     {
         std::cout << "[EE] Unable to get existment status of watcher" << std::endl;
-        tr.abort();
+        
         return true;
+    }
+}
+// Существует ли дежурный (Для удаления)
+bool check_if_exists(int id, pqxx::work &tr)
+{
+    try
+    {
+        bool result = tr.query_value<bool>("SELECT EXISTS (SELECT 1 FROM watchers WHERE name = '" + std::to_string(id) + "') AS name_exists;");
+        
+        return result;
+    }
+    catch (std::exception &e)
+    {
+        std::cout << "[EE] Unable to get existment status of watcher" << std::endl;
+        
+        return false;
     }
 }
 bool check_user_if_exists(int64_t &id, pqxx::connection &c)
@@ -232,31 +290,17 @@ bool check_user_if_exists(int64_t &id, pqxx::connection &c)
     }
 }
 // Поиск доступного id
-int get_aval_id(pqxx::connection &conn)
+int get_aval_id(pqxx::work &tr)
 {
-    pqxx::work tr{conn};
     try
     {
-        int id = tr.query_value<int>(R"(
-WITH RECURSIVE available_id AS (
-    SELECT 0 AS id -- Начинаем с 0
-    UNION ALL
-    SELECT id + 1
-    FROM available_id
-    WHERE id + 1 NOT IN (SELECT id FROM users)
-    AND id < (SELECT MAX(id) FROM users) -- Ограничиваем максимальным id
-)
-SELECT id FROM available_id
-ORDER BY id
-LIMIT 1;
-)");
-        tr.commit();
+        int id = tr.query_value<int>(SQL::get_aval_id);
+    
         return id;
     }
     catch (std::exception &e)
     {
         std::cout << "[EE] Getting max id of watcher error:  " << e.what() << std::endl;
-        tr.abort();
-        return 10000;
+        return -1;
     }
 }

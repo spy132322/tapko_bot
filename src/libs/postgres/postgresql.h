@@ -7,15 +7,19 @@ namespace psql
     class DB
     {
     private:
+        struct GuyData
+        {
+            int id;
+            std::string Name;
+            bool isKilled;
+            bool isWas;
+        };
         // Данные для соеденения
         std::string c_info;
-        struct GuyData{
-            int id = -1;
-            std::string Name = "";
-            bool isKilled = false;
-            bool isWas = false;
-        };
+
     public:
+        // Data дежурных
+
         // Init db class settings
         DB();
         // Add new user
@@ -26,6 +30,8 @@ namespace psql
         void stop();
         // Add watcher
         int add(std::string name);
+        // Del watcher
+        int del(int id);
         // List дежурных
         std::vector<GuyData> list();
     };
