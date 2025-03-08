@@ -11,8 +11,7 @@
 5. Автоматизация вызовов новых дежурных
 ## Использованные библиотеки
 1. [TgBot-cpp](https://github.com/reo7sp/tgbot-cpp)
-2. [JSON nlohmann](https://github.com/nlohmann/json)
-3. [libpqxx](https://github.com/jtv/libpqxx)
+2. [libpqxx](https://github.com/jtv/libpqxx)
 ## Комманды бота
 ### Доступные обычным пользователям:
 1. `/info` - выводит информацию о боте.

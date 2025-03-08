@@ -38,5 +38,4 @@ build
 data
 *.sql
 .vscode
-config.json
-main
+docker
