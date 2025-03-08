@@ -233,7 +233,6 @@ namespace psql
         std::vector<std::string> result;
         try
         {
-            std::vector<std::string> result;
             pqxx::connection conn(c_info);
             pqxx::work tr{conn};
             for (auto &[date] : tr.query<std::string>(SQL::get_all_dates))
