@@ -216,7 +216,9 @@ namespace psql
                 return 0;
             }
             else
-            {
+            {   
+                tr.abort();
+                conn.close();
                 return 1;
             }
         }
@@ -258,6 +260,32 @@ namespace psql
             std::cout << "[EE] Error getting list of dates " << e.what() << std::endl;
             result.push_back("EE");
             return result;
+        }
+    }
+    int DB::del_date(std::string date)
+    {
+        try
+        {
+            pqxx::connection conn(c_info);
+            pqxx::transaction tr(conn);
+            if (check_if_date_exists(date, tr))
+            {
+                tr.exec("DELETE FROM dates WHERE date='" + date + "';");
+                tr.commit();
+                conn.close();
+                return 0;
+            }
+            else
+            {
+                tr.abort();
+                conn.close();
+                return 1;
+            }
+        }
+        catch (std::exception &e)
+        {
+            std::cout << "[EE] Error deleting date to DB " << e.what() << std::endl;
+            return 2;
         }
     }
 

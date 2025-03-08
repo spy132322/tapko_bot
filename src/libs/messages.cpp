@@ -62,4 +62,14 @@ namespace messages
 Используйте формат ГГГГ-ММ-ДД
 /add_date 2023-10-31
     )";
+    const char wrong_params_del_date[]=R"(
+❌ Ошибка: Некорректный формат даты.
+Используйте формат ГГГГ-ММ-ДД
+/del_date 2023-10-31
+    )";
+    const char not_enough_params_del_date[]=R"(
+⚠️ Недостаточно параметров!
+Используйте формат ГГГГ-ММ-ДД
+/del_date 2023-10-31
+    )";
 };

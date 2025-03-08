@@ -154,7 +154,7 @@ int main()
                                   switch (result)
                                   {
                                   case 0:
-                                    bot.getApi().sendMessage(message->chat->id, "Успешно добавлена дата " + setting + "в исключения");
+                                    bot.getApi().sendMessage(message->chat->id, "Успешно добавлена дата " + setting + " в исключения");
                                     break;
                                   case 1:
                                     bot.getApi().sendMessage(message->chat->id, "⚠️ Дата уже существует в базе данных ⚠️");
@@ -177,7 +177,8 @@ int main()
                               {
                                 bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
                               } });
-  bot.getEvents().onCommand("list_date", [&bot](TgBot::Message::Ptr message)
+  // List dates
+  bot.getEvents().onCommand("list_dates", [&bot](TgBot::Message::Ptr message)
                             {
                               std::cout << "[II] " << message->chat->firstName << " has used list_date command" << std::endl; 
                               std::vector<std::string> list;
@@ -202,6 +203,41 @@ int main()
                                 message_to = message_to + strm + "\n";
                               }
                               bot.getApi().sendMessage(message->chat->id, message_to); });
+  bot.getEvents().onCommand("del_date", [&bot](TgBot::Message::Ptr message)
+                            {
+                                if (db.check_admin(message->chat->id))
+                                {
+                                  std::cout << "[II] " << message->chat->username << " has used del_date command " + message->text << std::endl;
+                                  if (message->text.size() > 10 and isDate(message->text.substr(10)))
+                                  {
+                                    std::string setting = message->text.substr(10);
+                                    int result = db.del_date(setting);
+                                    switch (result)
+                                    {
+                                    case 0:
+                                      bot.getApi().sendMessage(message->chat->id, "Успешно удалена дата " + setting + " из исключений");
+                                      break;
+                                    case 1:
+                                      bot.getApi().sendMessage(message->chat->id, "⚠️ Дата не существует в базе данных ⚠️");
+                                      break;
+                                    case 2:
+                                      bot.getApi().sendMessage(message->chat->id, "⚠️ Внутренняя ошибка сервера, удаление даты не удачно ⚠️");
+                                      break;
+                                    }
+                                  }
+                                  else if (!isDate(message->text.substr(10)))
+                                  {
+                                    bot.getApi().sendMessage(message->chat->id, messages::wrong_params_del_date);
+                                  }
+                                  else
+                                  {
+                                    bot.getApi().sendMessage(message->chat->id, messages::not_enough_params_del_date);
+                                  }
+                                }
+                                else
+                                {
+                                  bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
+                                } });
   try
   {
     printf("Bot username: %s\n", bot.getApi().getMe()->username.c_str());
@@ -225,10 +261,32 @@ bool isDate(std::string date)
   {
     return false;
   }
-  else
+
+  // Проверяем, что год, месяц и день — числа
+  std::string year = date.substr(0, 4);
+  std::string month = date.substr(5, 2);
+  std::string day = date.substr(8, 2);
+
+  if (!isInterger(year) || !isInterger(month) || !isInterger(day))
   {
-    return true;
+    return false;
   }
+
+  // Дополнительная проверка на корректность месяца и дня
+  int monthValue = std::stoi(month);
+  int dayValue = std::stoi(day);
+
+  if (monthValue < 1 || monthValue > 12)
+  {
+    return false; 
+  }
+
+  if (dayValue < 1 || dayValue > 31)
+  {
+    return false; 
+  }
+
+  return true;
 }
 bool isInterger(std::string a)
 {
