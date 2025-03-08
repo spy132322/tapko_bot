@@ -16,4 +16,7 @@ SELECT EXISTS (SELECT 1 FROM watchers);
     const char get_all_watchers[]=R"(
     SELECT * FROM watchers;
 )";
+    const char get_all_dates[]=R"(
+SELECT * FROM dates;
+    )";
 };

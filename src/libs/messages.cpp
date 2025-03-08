@@ -52,4 +52,14 @@ namespace messages
 Используйте команду так: /del <id>
 Пример: /del 123
     )";
+    const char wrong_params_add_date[]=R"(
+❌ Ошибка: Некорректный формат даты.
+Используйте формат ГГГГ-ММ-ДД
+/add_date 2023-10-31
+    )";
+    const char not_enough_params_add_date[]=R"(
+⚠️ Недостаточно параметров!
+Используйте формат ГГГГ-ММ-ДД
+/add_date 2023-10-31
+    )";
 };

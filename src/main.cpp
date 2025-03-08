@@ -6,12 +6,17 @@
 #include <fstream>
 #include <thread>
 #include <tgbot/tgbot.h>
+#include <chrono>
+#include <ctime>
+bool stop = false;
 using json = nlohmann::json;
 psql::DB db;
 bool is_safe_input(const std::string &input);
-bool isInterger(std::string &a)
-
-    int main()
+bool isInterger(std::string a);
+bool isDate(std::string date);
+// Текущее сообщение о дежурстве
+std::string curr_message;
+int main()
 {
   // Импортируем ключ бота
   std::ifstream conf("config.json");
@@ -33,7 +38,7 @@ bool isInterger(std::string &a)
                             {
                               if (db.check_admin(message->chat->id))
                               {
-                                std::cout << "[II] " << message->chat->username << "has used add command " + message->text << std::endl;
+                                std::cout << "[II] " << message->chat->username << " has used add command " + message->text << std::endl;
                                 if (message->text.size() > 5 and is_safe_input(message->text.substr(5)))
                                 {
                                   std::string setting = message->text.substr(5);
@@ -53,7 +58,7 @@ bool isInterger(std::string &a)
                                 }
                                 else if (!is_safe_input(message->text.substr(5)))
                                 {
-                                  std::cout << "[WW] " << message->chat->username << "Tried to use SQL injection" << std::endl;
+                                  std::cout << "[WW] " << message->chat->username << " Tried to use SQL injection" << std::endl;
                                   bot.getApi().sendMessage(message->chat->id, "Nice try. Hah)");
                                 }
                                 else
@@ -68,7 +73,7 @@ bool isInterger(std::string &a)
   // Список Дежурных
   bot.getEvents().onCommand("list", [&bot](TgBot::Message::Ptr message)
                             {
-                              std::cout << "[II] " << message->chat->firstName << "has used list command" << std::endl; 
+                              std::cout << "[II] " << message->chat->firstName << " has used list command" << std::endl; 
                               std::vector<std::string> list;
                               list.push_back("📋 Список дежурных:");
                               if (db.list()[0].Name != "Список пуст")
@@ -105,7 +110,7 @@ bool isInterger(std::string &a)
                             {
                               if (db.check_admin(message->chat->id))
                               {
-                                std::cout << "[II] " << message->chat->username << "has used add command " + message->text << std::endl;
+                                std::cout << "[II] " << message->chat->username << " has used add command " + message->text << std::endl;
                                 if (message->text.size() > 5 and isInterger(message->text.substr(5)))
                                 {
 
@@ -136,6 +141,67 @@ bool isInterger(std::string &a)
                               {
                                 bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
                               } });
+  // Add date bot command
+  bot.getEvents().onCommand("add_date", [&bot](TgBot::Message::Ptr message)
+                            {
+                              if (db.check_admin(message->chat->id))
+                              {
+                                std::cout << "[II] " << message->chat->username << " has used add_date command " + message->text << std::endl;
+                                if (message->text.size() > 10 and isDate(message->text.substr(10)))
+                                {
+                                  std::string setting = message->text.substr(10);
+                                  int result = db.add_date(setting);
+                                  switch (result)
+                                  {
+                                  case 0:
+                                    bot.getApi().sendMessage(message->chat->id, "Успешно добавлена дата " + setting + "в исключения");
+                                    break;
+                                  case 1:
+                                    bot.getApi().sendMessage(message->chat->id, "⚠️ Дата уже существует в базе данных ⚠️");
+                                    break;
+                                  case 2:
+                                    bot.getApi().sendMessage(message->chat->id, "⚠️ Внутренняя ошибка сервера, добавление даты не удачно ⚠️");
+                                    break;
+                                  }
+                                }
+                                else if (!isDate(message->text.substr(10)))
+                                {
+                                  bot.getApi().sendMessage(message->chat->id, messages::wrong_params_add_date);
+                                }
+                                else
+                                {
+                                  bot.getApi().sendMessage(message->chat->id, messages::not_enough_params_add_date);
+                                }
+                              }
+                              else
+                              {
+                                bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
+                              } });
+  bot.getEvents().onCommand("list_date", [&bot](TgBot::Message::Ptr message)
+                            {
+                              std::cout << "[II] " << message->chat->firstName << " has used list_date command" << std::endl; 
+                              std::vector<std::string> list;
+                              list.push_back("📋 Список исключенных дат:");
+                              if (db.list_dates()[0] != "LIE" and db.list_dates()[0] != "EE")
+                              {
+                                for(std::string a : db.list_dates()){
+                                  list.push_back(a);
+                                }
+                                
+                              }
+                              else if(db.list_dates()[0] == "LIE")
+                                {
+                                  list[0] = "📋 Список исклеченных дат пуст. Нет данных для отображения.";
+                                }
+                              else{
+                                list[0] = "⚠️ Внутренняя ошибка сервера, чтение списка дат не удачно ⚠️.";
+                              }
+                              std::string message_to = "";
+                              for (std::string strm : list)
+                              {
+                                message_to = message_to + strm + "\n";
+                              }
+                              bot.getApi().sendMessage(message->chat->id, message_to); });
   try
   {
     printf("Bot username: %s\n", bot.getApi().getMe()->username.c_str());
@@ -151,6 +217,18 @@ bool isInterger(std::string &a)
     printf("error: %s\n", e.what());
   }
   return 0;
+}
+bool isDate(std::string date)
+{
+  // Проверяем формат даты (можно добавить более строгую проверку)
+  if (date.size() != 10 || date[4] != '-' || date[7] != '-')
+  {
+    return false;
+  }
+  else
+  {
+    return true;
+  }
 }
 bool isInterger(std::string a)
 {
@@ -176,4 +254,11 @@ bool is_safe_input(const std::string &input)
   }
 
   return true;
+}
+// Обновление дежурных в 12 ночи
+void UpdateWatchers()
+{
+  while (!stop)
+  {
+  }
 }

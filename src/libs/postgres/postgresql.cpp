@@ -15,7 +15,10 @@ bool stop_s = false;
 void check_tables(std::string &c);
 int get_aval_id(pqxx::work &tr);
 bool check_if_exists(std::string name, pqxx::work &tr);
+bool check_if_exists(int id, pqxx::work &tr);
 bool check_user_if_exists(int64_t &id, pqxx::connection &c);
+bool check_if_date_exists(std::string date, pqxx::work &tr);
+
 using json = nlohmann::json;
 
 namespace psql
@@ -89,19 +92,22 @@ namespace psql
         try
         {
             pqxx::connection conn(c_info);
-            pqxx::work tr{conn}; 
+            pqxx::work tr{conn};
             try
             {
                 if (!check_if_exists(name, tr))
                 {
-                        
+
                     int aval_id = get_aval_id(tr);
-                    if(aval_id != -1){
-                    tr.exec("INSERT INTO watchers (id, Name, isKilled, isWas) VALUES ('" + std::to_string(aval_id) + "','" + name + "', FALSE, FALSE);");
-                    tr.commit();
-                    conn.close();
-                    return 0;
-                    }else{
+                    if (aval_id != -1)
+                    {
+                        tr.exec("INSERT INTO watchers (id, Name, isKilled, isWas) VALUES ('" + std::to_string(aval_id) + "','" + name + "', FALSE, FALSE);");
+                        tr.commit();
+                        conn.close();
+                        return 0;
+                    }
+                    else
+                    {
                         conn.close();
                         return 2;
                     }
@@ -132,7 +138,7 @@ namespace psql
         try
         {
             pqxx::connection conn(c_info);
-            pqxx::work tr{conn}; 
+            pqxx::work tr{conn};
             try
             {
                 if (check_if_exists(id, tr))
@@ -176,10 +182,11 @@ namespace psql
             {
                 for (auto &[id, Name, isKilled, isWas] : tr.query<int, std::string, bool, bool>(SQL::get_all_watchers))
                 {
-                    result.push_back({id,Name,isKilled,isWas});
+                    result.push_back({id, Name, isKilled, isWas});
                 }
             }
-            else{
+            else
+            {
                 result.push_back({0, "Список пуст", true, true});
             }
 
@@ -194,6 +201,66 @@ namespace psql
             return result;
         }
     }
+    // Добавить дату в БД
+    int DB::add_date(std::string date)
+    {
+        try
+        {
+            pqxx::connection conn(c_info);
+            pqxx::transaction tr(conn);
+            if (!check_if_date_exists(date, tr))
+            {
+                tr.exec("INSERT INTO dates (date) VALUES ('" + date + "');");
+                tr.commit();
+                conn.close();
+                return 0;
+            }
+            else
+            {
+                return 1;
+            }
+        }
+        catch (std::exception &e)
+        {
+            std::cout << "[EE] Error adding date to DB " << e.what() << std::endl;
+            return 2;
+        }
+    }
+    // Получить все исключенный даты
+    std::vector<std::string> DB::list_dates()
+    {
+        std::vector<std::string> result;
+        try
+        {
+            std::vector<std::string> result;
+            pqxx::connection conn(c_info);
+            pqxx::work tr{conn};
+            for (auto &[date] : tr.query<std::string>(SQL::get_all_dates))
+            {
+                result.push_back(date);
+            }
+            if (result.empty())
+            {
+                result.push_back("LIE");
+                tr.commit();
+                conn.close();
+                return result;
+            }
+            else
+            {
+                tr.commit();
+                conn.close();
+                return result;
+            }
+        }
+        catch (std::exception &e)
+        {
+            std::cout << "[EE] Error getting list of dates " << e.what() << std::endl;
+            result.push_back("EE");
+            return result;
+        }
+    }
+
 };
 // Verify Tables
 void check_tables(std::string &c)
@@ -239,19 +306,34 @@ void check_tables(std::string &c)
         std::cout << "[EE] " << e.what() << std::endl;
     }
 }
+bool check_if_date_exists(std::string date, pqxx::work &tr)
+{
+    try
+    {
+        bool result = tr.query_value<bool>("SELECT EXISTS (SELECT 1 FROM dates WHERE date = '" + date + "') AS name_exists;");
+
+        return result;
+    }
+    catch (std::exception &e)
+    {
+        std::cout << "[EE] Unable to get existment status of date" << std::endl;
+
+        return true;
+    }
+}
 // Существует ли дежурный
 bool check_if_exists(std::string name, pqxx::work &tr)
 {
     try
     {
         bool result = tr.query_value<bool>("SELECT EXISTS (SELECT 1 FROM watchers WHERE name = '" + name + "') AS name_exists;");
-        
+
         return result;
     }
     catch (std::exception &e)
     {
         std::cout << "[EE] Unable to get existment status of watcher" << std::endl;
-        
+
         return true;
     }
 }
@@ -260,14 +342,14 @@ bool check_if_exists(int id, pqxx::work &tr)
 {
     try
     {
-        bool result = tr.query_value<bool>("SELECT EXISTS (SELECT 1 FROM watchers WHERE name = '" + std::to_string(id) + "') AS name_exists;");
-        
+        bool result = tr.query_value<bool>("SELECT EXISTS (SELECT 1 FROM watchers WHERE id = '" + std::to_string(id) + "') AS name_exists;");
+
         return result;
     }
     catch (std::exception &e)
     {
         std::cout << "[EE] Unable to get existment status of watcher" << std::endl;
-        
+
         return false;
     }
 }
@@ -295,7 +377,7 @@ int get_aval_id(pqxx::work &tr)
     try
     {
         int id = tr.query_value<int>(SQL::get_aval_id);
-    
+
         return id;
     }
     catch (std::exception &e)

@@ -32,6 +32,10 @@ namespace psql
         int add(std::string name);
         // Del watcher
         int del(int id);
+        // Add date
+        int add_date(std::string date);
+        // List dates
+        std::vector<std::string> list_dates();
         // List дежурных
         std::vector<GuyData> list();
     };
