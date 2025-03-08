@@ -20,6 +20,6 @@ SELECT EXISTS (SELECT 1 FROM watchers);
 SELECT * FROM dates;
     )";
     const char get_all_users[]=R"(
-SELECT * FROM users WHERE isAutosend=TRUE;
+SELECT id FROM users WHERE isAutosend=TRUE;
 )";
 };

@@ -422,7 +422,7 @@ namespace psql
 
             pqxx::connection conn(c_info);
             pqxx::work tr{conn};
-            for (auto &[ids] : tr.query<int>(SQL::get_all_users))
+            for (auto &[ids] : tr.query<int64_t>(SQL::get_all_users))
             {
                 result.push_back(ids);
             }
