@@ -6,11 +6,10 @@
 #include <fstream>
 #include <chrono>
 #include <thread>
-#include "../json.hpp"
 #include <vector>
 #include <memory>
 #include "SQL.h"
-
+#include <cstdlib>
 void check_tables(std::string &c);
 int get_aval_id(pqxx::work &tr);
 bool check_if_exists(std::string name, pqxx::work &tr);
@@ -18,22 +17,23 @@ bool check_if_exists(int id, pqxx::work &tr);
 bool check_user_if_exists(int64_t &id, pqxx::connection &c);
 bool check_if_date_exists(std::string date, pqxx::work &tr);
 
-using json = nlohmann::json;
-
 namespace psql
 {
     // Init DB
     DB::DB()
     {
-        std::ifstream config("config.json");
-        json conf = json::parse(config);
-        config.close();
-        c_info = "dbname=" + conf["db"]["dbname"].get<std::string>() +
-                 " user=" + conf["db"]["user"].get<std::string>() +
-                 " password=" + conf["db"]["password"].get<std::string>() +
-                 " port=" + conf["db"]["port"].get<std::string>() +
-                 " host=" + conf["db"]["host"].get<std::string>();
+        if(std::getenv("DB_NAME") and std::getenv("DB_USER") and std::getenv("DB_PASSWORD") and std::getenv("DB_PORT") and std::getenv("DB_HOST")){
+        std::string params[]{std::getenv("DB_NAME"), std::getenv("DB_USER"), std::getenv("DB_PASSWORD") , std::getenv("DB_PORT") , std::getenv("DB_HOST")};
+        c_info = "dbname=" + params[0] +
+                 " user=" + params[1] +
+                 " password=" + params[2] +
+                 " port=" + params[3] +
+                 " host=" + params[4];
         check_tables(c_info);
+        } else{
+            std::cout << "[EE] Error initilizing DB: Not enough variables." << std::endl;
+            exit(-1);
+        }
     }
     // INIT нового пользователя
     void DB::new_user(int64_t &id, std::string &name, std::string &username)

@@ -1,7 +1,6 @@
 #include <regex>
 #include "libs/postgres/postgresql.h"
 #include <string>
-#include "libs/json.hpp"
 #include "libs/messages.cpp"
 #include <fstream>
 #include <thread>
@@ -10,11 +9,10 @@
 #include <ctime>
 #include <condition_variable>
 #include <csignal>
-
+#include <cstdlib>
 volatile sig_atomic_t stop = 0;
 bool skip = false;
 bool fboot = true;
-using json = nlohmann::json;
 psql::DB db;
 void Skip();
 void noSkip();
@@ -26,7 +24,11 @@ void UpdateWatchers();
 void UpdateMessage();
 void sigterm(int signal);
 void clearifend();
-void autosender(std::string botk, json &config);
+void autosender();
+
+std::string bot_key = std::getenv("TGBOT_KEY");
+int ahour = std::stoi(std::getenv("AUTO_HOUR"));
+int aminute = std::stoi(std::getenv("AUTO_MINUTE"));
 // Текущее сообщение о дежурстве
 std::string curr_message = "🚨 Дежурных нет. Слишком мало для создания списка дежурных.";
 int guys = 0;
@@ -53,12 +55,9 @@ bool get_curr_time();
 int main()
 {
   // Импортируем ключ бота
-  std::ifstream conf("config.json");
-  json config = json::parse(conf);
-  conf.close();
-  guys = config["guys"].get<int>();
+
   // Инит Ботинка
-  TgBot::Bot bot(config["bot"].get<std::string>());
+  TgBot::Bot bot(bot_key);
   // Иннит комманд
   bot.getEvents().onCommand("start", [&bot](TgBot::Message::Ptr message)
                             { 
@@ -317,7 +316,9 @@ int main()
                                 } });
   // Текущие дежурные
   bot.getEvents().onCommand("current", [&bot](TgBot::Message::Ptr message)
-                            { bot.getApi().sendMessage(message->chat->id, curr_message); });
+                            { 
+                              std::cout << "[II] " << message->chat->id << " has used /current command" << std::endl;
+                              bot.getApi().sendMessage(message->chat->id, curr_message); });
   bot.getEvents().onCommand("skip", [&bot](TgBot::Message::Ptr message)
                             {
                               if (db.check_admin(message->chat->id))
@@ -328,6 +329,7 @@ int main()
                                     names = names + " " + a;
                                   }
                                   UpdateWatchers();
+                                  std::cout << "[II] " << message->chat->id << " has used /skip command" << std::endl;
                                   bot.getApi().sendMessage(message->chat->id, "⚠️ Пропущены ученики:" + names + " - с отметкой, что дежурили. ⚠️" );
                               }
                               else
@@ -343,6 +345,7 @@ int main()
                                     names = names + " " + a;
                                   }
                                   UpdateWatchers();
+                                  std::cout << "[II] " << message->chat->id << " has used /pass command" << std::endl;
                                   bot.getApi().sendMessage(message->chat->id, "⚠️ Пропущены ученики:" + names + " - с отметкой, что дежурили. ⚠️" );
                                 }
                                 else
@@ -496,7 +499,7 @@ int main()
   UpdateWatchers();
   std::signal(SIGTERM, sigterm);
   std::thread updater(Updater);
-  std::thread autosend(autosender, config["bot"].get<std::string>(), config);
+  std::thread autosend(autosender);
   while (!stop)
   {
     try
@@ -717,10 +720,19 @@ void clearifend()
 // обновление сообщения
 void UpdateMessage()
 {
-  curr_message = "🚨 Текущие дежурные на сегодня:\n";
-  for (std::string a : current_watchers.names)
+  
+  if (db.list()[0].Name == "Список пуст")
   {
-    curr_message = curr_message + a + "\n";
+    curr_message = "🚨 Дежурных нет. Слишком мало для создания списка дежурных.";
+  }
+  else
+  {
+    curr_message = "🚨 Текущие дежурные на сегодня:\n";
+    std::cout << db.list().size() << std::endl;
+    for (std::string a : current_watchers.names)
+    {
+      curr_message = curr_message + a + "\n";
+    }
   }
 }
 // Обновление статуса дежуревших
@@ -802,12 +814,10 @@ void sigterm(int signal)
   }
 }
 // Авто отправлялка
-void autosender(std::string botk, json &config)
+void autosender()
 {
 
-  TgBot::Bot bot(botk);
-  int ahour = config["autosend"]["hours"].get<int>();
-  int aminutes = config["autosend"]["minutes"].get<int>();
+  TgBot::Bot bot(bot_key);
   std::cout << "[II] Starting autosend thread" << std::endl;
   while (!stop)
   {
@@ -819,7 +829,7 @@ void autosender(std::string botk, json &config)
       std::this_thread::sleep_for(std::chrono::seconds(20));
     }
     // Выбирал время Святик!!!!!
-    if (!db.list_users().empty() and Time.hour == ahour and Time.minute == aminutes)
+    if (!db.list_users().empty() and Time.hour == ahour and Time.minute == aminute)
     {
       std::cout << "[II] Running autosend thread" << std::endl;
       for (int64_t id : db.list_users())
