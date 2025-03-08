@@ -39,3 +39,4 @@ data
 *.sql
 .vscode
 config.json
+main

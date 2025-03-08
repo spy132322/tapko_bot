@@ -12,9 +12,7 @@ bool is_safe_input(const std::string &input);
 
 int main()
 {
-  std::cout << "going in main" << std::endl;
-  std::this_thread::sleep_for(std::chrono::seconds(2));
-  // Импортируем ключ бота
+    // Импортируем ключ бота
   std::ifstream conf("config.json");
   json config = json::parse(conf);
   conf.close();
