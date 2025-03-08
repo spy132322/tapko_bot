@@ -48,6 +48,8 @@ namespace psql
         int Kill(int id);
         // Установить что ввоскрес
         int unKill(int id);
+        // Сброс дежурства
+        void clearall();
     };
 };
 

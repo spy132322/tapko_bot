@@ -376,6 +376,17 @@ namespace psql
             return 2;
         }
     }
+    void DB::clearall(){
+        try{
+            pqxx::connection conn(c_info);
+            pqxx::work tr{conn};
+            tr.exec("UPDATE watchers SET isWas = FALSE WHERE isWas=TRUE;");
+            tr.commit();
+            conn.close();
+        }catch(std::exception &e){
+            std::cout <<"[EE] Error reseting watchers " << e.what() << std::endl;
+        }
+    }
 
 };
 // Verify Tables

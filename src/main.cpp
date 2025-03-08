@@ -301,6 +301,150 @@ int main()
                                 {
                                   bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
                                 } });
+// Kill 
+bot.getEvents().onCommand("kill", [&bot](TgBot::Message::Ptr message)
+                                {
+                                  if (db.check_admin(message->chat->id))
+                                  {
+                                    std::cout << "[II] " << message->chat->username << " has used kill command " + message->text << std::endl;
+                                    if (message->text.size() > 6 and isInterger(message->text.substr(6)))
+                                    {
+    
+                                      std::string setting = message->text.substr(6);
+                                      int result = db.Kill(std::stoi(setting));
+                                      switch (result)
+                                      {
+                                      case 0:
+                                        bot.getApi().sendMessage(message->chat->id, "Дежурный успешно заблокирован с ID: " + setting);
+                                        break;
+                                      case 1:
+                                        bot.getApi().sendMessage(message->chat->id, "⚠️ Дежурного не существует в базе данных ⚠️");
+                                        break;
+                                      case 2:
+                                        bot.getApi().sendMessage(message->chat->id, "⚠️ Внутренняя ошибка сервера, блокировка дежурного не удачна ⚠️");
+                                        break;
+                                      }
+                                    }
+                                    else if(message->text.size() <= 5)
+                                    {
+                                      bot.getApi().sendMessage(message->chat->id, messages::not_enough_params_kill);
+                                    }
+                                    else {
+                                      bot.getApi().sendMessage(message->chat->id, messages::wrong_params_kill);
+                                    }
+                                  }
+                                  else
+                                  {
+                                    bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
+                                  } });
+//unkill
+bot.getEvents().onCommand("unkill", [&bot](TgBot::Message::Ptr message)
+                                  {
+                                    if (db.check_admin(message->chat->id))
+                                    {
+                                      std::cout << "[II] " << message->chat->username << " has used unkill command " + message->text << std::endl;
+                                      if (message->text.size() > 7 and isInterger(message->text.substr(7)))
+                                      {
+      
+                                        std::string setting = message->text.substr(7);
+                                        int result = db.unKill(std::stoi(setting));
+                                        switch (result)
+                                        {
+                                        case 0:
+                                          bot.getApi().sendMessage(message->chat->id, "Дежурный успешно разблокирован с ID: " + setting);
+                                          break;
+                                        case 1:
+                                          bot.getApi().sendMessage(message->chat->id, "⚠️ Дежурного не существует в базе данных ⚠️");
+                                          break;
+                                        case 2:
+                                          bot.getApi().sendMessage(message->chat->id, "⚠️ Внутренняя ошибка сервера, разблокировка дежурного не удачна ⚠️");
+                                          break;
+                                        }
+                                      }
+                                      else if(message->text.size() <= 6)
+                                      {
+                                        bot.getApi().sendMessage(message->chat->id, messages::not_enough_params_unkill);
+                                      }
+                                      else {
+                                        bot.getApi().sendMessage(message->chat->id, messages::wrong_params_unkill);
+                                      }
+                                    }
+                                    else
+                                    {
+                                      bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
+                                    } });
+// set
+bot.getEvents().onCommand("set", [&bot](TgBot::Message::Ptr message)
+                                    {
+                                      if (db.check_admin(message->chat->id))
+                                      {
+                                        std::cout << "[II] " << message->chat->username << " has used unset command " + message->text << std::endl;
+                                        if (message->text.size() > 5 and isInterger(message->text.substr(5)))
+                                        {
+        
+                                          std::string setting = message->text.substr(5);
+                                          int result = db.SetWas(std::stoi(setting));
+                                          switch (result)
+                                          {
+                                          case 0:
+                                            bot.getApi().sendMessage(message->chat->id, "Установленна отметка о дежурстве на дежурного с ID: " + setting);
+                                            break;
+                                          case 1:
+                                            bot.getApi().sendMessage(message->chat->id, "⚠️ Дежурного не существует в базе данных ⚠️");
+                                            break;
+                                          case 2:
+                                            bot.getApi().sendMessage(message->chat->id, "⚠️ Внутренняя ошибка сервера, установка отметки о дежурстве не удачна ⚠️");
+                                            break;
+                                          }
+                                        }
+                                        else if(message->text.size() <= 4)
+                                        {
+                                          bot.getApi().sendMessage(message->chat->id, messages::not_enough_params_unset);
+                                        }
+                                        else {
+                                          bot.getApi().sendMessage(message->chat->id, messages::wrong_params_unset);
+                                        }
+                                      }
+                                      else
+                                      {
+                                        bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
+                                      } });
+//unset
+bot.getEvents().onCommand("unset", [&bot](TgBot::Message::Ptr message)
+                                      {
+                                        if (db.check_admin(message->chat->id))
+                                        {
+                                          std::cout << "[II] " << message->chat->username << " has used unset command " + message->text << std::endl;
+                                          if (message->text.size() > 7 and isInterger(message->text.substr(7)))
+                                          {
+          
+                                            std::string setting = message->text.substr(6);
+                                            int result = db.UnSetWas(std::stoi(setting));
+                                            switch (result)
+                                            {
+                                            case 0:
+                                              bot.getApi().sendMessage(message->chat->id, "Убрана отметка о дежурстве на дежурного с ID: " + setting);
+                                              break;
+                                            case 1:
+                                              bot.getApi().sendMessage(message->chat->id, "⚠️ Дежурного не существует в базе данных ⚠️");
+                                              break;
+                                            case 2:
+                                              bot.getApi().sendMessage(message->chat->id, "⚠️ Внутренняя ошибка сервера, уборка отметки о дежурстве не удачна ⚠️");
+                                              break;
+                                            }
+                                          }
+                                          else if(message->text.size() <= 6)
+                                          {
+                                            bot.getApi().sendMessage(message->chat->id, messages::not_enough_params_unset);
+                                          }
+                                          else {
+                                            bot.getApi().sendMessage(message->chat->id, messages::wrong_params_unset);
+                                          }
+                                        }
+                                        else
+                                        {
+                                          bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
+                                        } });
   UpdateWatchers();
   while (!stop)
   {
@@ -399,12 +543,12 @@ void Updater()
       std::cout << "[II] Automatic update watchers started" << std::endl;
       UpdateWatchers();
     }
+    std::this_thread::sleep_for(std::chrono::minutes(30));
   }
 }
 // Обновление дежурных
 void UpdateWatchers()
 {
-
   clearifend();
   if (db.list().size() > guys)
   {
@@ -496,9 +640,6 @@ void UpdateWatchers()
       Skip();
     }
     skip = false;
-    
-
-    
     UpdateMessage();
   }
 }
@@ -508,6 +649,7 @@ void clearifend()
   {
     if (current_watchers.ids.at(0) >= db.list().size() - guys)
     {
+      db.clearall();
       old_watchers.ids.clear();
     }
   }
