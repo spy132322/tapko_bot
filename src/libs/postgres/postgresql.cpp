@@ -288,6 +288,94 @@ namespace psql
             return 2;
         }
     }
+    int DB::SetWas(int id){
+        try{
+            pqxx::connection conn(c_info);
+            pqxx::work tr{conn};
+            if (check_if_exists(id, tr))
+            {
+                tr.exec("UPDATE watchers SET isWas = TRUE WHERE id='"+std::to_string(id) + "';");
+                tr.commit();
+                conn.close();
+                return 0;
+            }
+            else
+            {   
+                tr.abort();
+                conn.close();
+                return 1;
+            }
+        }catch(std::exception &e){
+            std::cout << "[EE] Error when updating watcher " << e.what() << std::endl;
+            return 2;
+        }
+    }
+    int DB::UnSetWas(int id){
+        try{
+            pqxx::connection conn(c_info);
+            pqxx::work tr{conn};
+            if (check_if_exists(id, tr))
+            {
+                tr.exec("UPDATE watchers SET isWas = FALSE WHERE id='"+std::to_string(id) + "';");
+                tr.commit();
+                conn.close();
+                return 0;
+            }
+            else
+            {   
+                tr.abort();
+                conn.close();
+                return 1;
+            }
+        }catch(std::exception &e){
+            std::cout << "[EE] Error when updating watcher " << e.what() << std::endl;
+            return 2;
+        }
+    }
+    int DB::Kill(int id){
+        try{
+            pqxx::connection conn(c_info);
+            pqxx::work tr{conn};
+            if (check_if_exists(id, tr))
+            {
+                tr.exec("UPDATE watchers SET isKilled = TRUE WHERE id='"+std::to_string(id) + "';");
+                tr.commit();
+                conn.close();
+                return 0;
+            }
+            else
+            {   
+                tr.abort();
+                conn.close();
+                return 1;
+            }
+        }catch(std::exception &e){
+            std::cout << "[EE] Error when updating watcher " << e.what() << std::endl;
+            return 2;
+        }
+    }
+    int DB::unKill(int id){
+        try{
+            pqxx::connection conn(c_info);
+            pqxx::work tr{conn};
+            if (check_if_exists(id, tr))
+            {
+                tr.exec("UPDATE watchers SET isKilled = FALSE WHERE id='"+std::to_string(id) + "';");
+                tr.commit();
+                conn.close();
+                return 0;
+            }
+            else
+            {   
+                tr.abort();
+                conn.close();
+                return 1;
+            }
+        }catch(std::exception &e){
+            std::cout << "[EE] Error when updating watcher " << e.what() << std::endl;
+            return 2;
+        }
+    }
 
 };
 // Verify Tables
@@ -334,6 +422,7 @@ void check_tables(std::string &c)
         std::cout << "[EE] " << e.what() << std::endl;
     }
 }
+// Существуел ли дата, или все же закон сильнее нас.
 bool check_if_date_exists(std::string date, pqxx::work &tr)
 {
     try
@@ -381,6 +470,7 @@ bool check_if_exists(int id, pqxx::work &tr)
         return false;
     }
 }
+// Существует ли пользователь
 bool check_user_if_exists(int64_t &id, pqxx::connection &c)
 {
     pqxx::work tr{c};

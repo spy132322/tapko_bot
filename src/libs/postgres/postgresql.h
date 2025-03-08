@@ -40,6 +40,14 @@ namespace psql
         std::vector<std::string> list_dates();
         // List дежурных
         std::vector<GuyData> list();
+        // Установить что был
+        int SetWas(int id);
+        // Установить что небыл
+        int UnSetWas(int id);
+        // Установить что убит
+        int Kill(int id);
+        // Установить что ввоскрес
+        int unKill(int id);
     };
 };
 
