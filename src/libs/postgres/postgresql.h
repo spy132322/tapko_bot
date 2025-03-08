@@ -40,6 +40,8 @@ namespace psql
         std::vector<std::string> list_dates();
         // List дежурных
         std::vector<GuyData> list();
+        // Get users with enabled autosend
+        std::vector<int64_t> list_users();
         // Установить что был
         int SetWas(int id);
         // Установить что небыл

@@ -8,7 +8,10 @@
 #include <tgbot/tgbot.h>
 #include <chrono>
 #include <ctime>
-bool stop = false;
+#include <condition_variable>
+#include <csignal>
+
+volatile sig_atomic_t stop = 0;
 bool skip = false;
 bool fboot = true;
 using json = nlohmann::json;
@@ -21,7 +24,9 @@ bool isDate(std::string date);
 void Updater();
 void UpdateWatchers();
 void UpdateMessage();
+void sigterm(int signal);
 void clearifend();
+void autosender(TgBot::Bot &bot);
 // Текущее сообщение о дежурстве
 std::string curr_message = "🚨 Дежурных нет. Слишком мало для создания списка дежурных.";
 int guys = 0;
@@ -39,6 +44,7 @@ struct time_s
   int minute;
   int second;
   int milliseconds;
+  int weekday;
 };
 wch current_watchers;
 wch old_watchers;
@@ -98,6 +104,16 @@ int main()
                               {
                                 bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
                               } });
+  bot.getEvents().onCommand("help", [&bot](TgBot::Message::Ptr message)
+                            {
+                                std::cout << "[II] " + message->chat->username + " has used help command" << std::endl;
+                                if (db.check_admin(message->chat->id)){
+                                  bot.getApi().sendMessage(message->chat->id, messages::help_admin,nullptr,nullptr,nullptr,"markdown");
+                                }
+                                else
+                                {
+                                  bot.getApi().sendMessage(message->chat->id, messages::help_users,nullptr,nullptr,nullptr,"markdown");
+                                } });
   // Список Дежурных
   bot.getEvents().onCommand("list", [&bot](TgBot::Message::Ptr message)
                             {
@@ -301,9 +317,9 @@ int main()
                                 {
                                   bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
                                 } });
-// Kill 
-bot.getEvents().onCommand("kill", [&bot](TgBot::Message::Ptr message)
-                                {
+  // Kill
+  bot.getEvents().onCommand("kill", [&bot](TgBot::Message::Ptr message)
+                            {
                                   if (db.check_admin(message->chat->id))
                                   {
                                     std::cout << "[II] " << message->chat->username << " has used kill command " + message->text << std::endl;
@@ -337,9 +353,9 @@ bot.getEvents().onCommand("kill", [&bot](TgBot::Message::Ptr message)
                                   {
                                     bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
                                   } });
-//unkill
-bot.getEvents().onCommand("unkill", [&bot](TgBot::Message::Ptr message)
-                                  {
+  // unkill
+  bot.getEvents().onCommand("unkill", [&bot](TgBot::Message::Ptr message)
+                            {
                                     if (db.check_admin(message->chat->id))
                                     {
                                       std::cout << "[II] " << message->chat->username << " has used unkill command " + message->text << std::endl;
@@ -373,9 +389,9 @@ bot.getEvents().onCommand("unkill", [&bot](TgBot::Message::Ptr message)
                                     {
                                       bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
                                     } });
-// set
-bot.getEvents().onCommand("set", [&bot](TgBot::Message::Ptr message)
-                                    {
+  // set
+  bot.getEvents().onCommand("set", [&bot](TgBot::Message::Ptr message)
+                            {
                                       if (db.check_admin(message->chat->id))
                                       {
                                         std::cout << "[II] " << message->chat->username << " has used unset command " + message->text << std::endl;
@@ -409,9 +425,9 @@ bot.getEvents().onCommand("set", [&bot](TgBot::Message::Ptr message)
                                       {
                                         bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
                                       } });
-//unset
-bot.getEvents().onCommand("unset", [&bot](TgBot::Message::Ptr message)
-                                      {
+  // unset
+  bot.getEvents().onCommand("unset", [&bot](TgBot::Message::Ptr message)
+                            {
                                         if (db.check_admin(message->chat->id))
                                         {
                                           std::cout << "[II] " << message->chat->username << " has used unset command " + message->text << std::endl;
@@ -446,6 +462,8 @@ bot.getEvents().onCommand("unset", [&bot](TgBot::Message::Ptr message)
                                           bot.getApi().sendMessage(message->chat->id, messages::not_enough_rights);
                                         } });
   UpdateWatchers();
+  std::signal(SIGTERM, sigterm);
+  std::thread updater(Updater);
   while (!stop)
   {
     try
@@ -530,15 +548,24 @@ void Updater()
 
   while (!stop)
   {
+    get_curr_time();
+    
     bool can_update = true;
-    for (auto &Date : db.list_dates())
+    if ((db.list_dates().at(0)!="LIE") and (db.list_dates().at(0)!="EE"))
     {
-      if (Time.year == std::stoi(Date.substr(0, 4)) and Time.month == std::stoi(Date.substr(5, 2)) and Time.day == std::stoi(Date.substr(8, 2)))
+      for (auto &Date : db.list_dates())
       {
-        can_update = false;
+        if (Time.year == std::stoi(Date.substr(0, 4)) and Time.month == std::stoi(Date.substr(5, 2)) and Time.day == std::stoi(Date.substr(8, 2)))
+        {
+          can_update = false;
+        }
       }
     }
-    if (get_curr_time() || (Time.hour == 0 and can_update))
+    if (Time.weekday == 0)
+    {
+      can_update = false;
+    }
+    if (Time.hour == 0 and can_update)
     {
       std::cout << "[II] Automatic update watchers started" << std::endl;
       UpdateWatchers();
@@ -666,7 +693,7 @@ void UpdateMessage()
 // Обновление статуса дежуревших
 void Skip()
 {
-  
+
   old_watchers.ids.clear();
   for (int id : current_watchers.ids)
   {
@@ -681,7 +708,8 @@ void noSkip()
 {
   if (!fboot)
   {
-    for(int id : old_watchers.ids){
+    for (int id : old_watchers.ids)
+    {
       db.SetWas(id);
     }
   }
@@ -723,7 +751,7 @@ bool get_curr_time()
     Time.minute = now_tm.tm_min;              // Минуты
     Time.second = now_tm.tm_sec;              // Секунды
     Time.milliseconds = milliseconds.count(); // Миллисекунды
-
+    Time.weekday = now_tm.tm_wday;            // День недели
     return true;
   }
   catch (std::exception &e)
@@ -731,4 +759,23 @@ bool get_curr_time()
     std::cout << "[EE] Error reading time " << e.what() << std::endl;
     return false;
   }
+}
+void sigterm(int signal)
+{
+  if (signal == SIGTERM)
+  {
+    std::cout << "[II] Получен сигнал терминации, выключаю проццессы." << std::endl;
+    stop = 1;
+  }
+}
+// Авто отправлялка
+void autosender(TgBot::Bot &bot){
+  get_curr_time();
+  // Выбирал время Святик!!!!!
+  if(!db.list_users().empty() and Time.hour==10 and Time.minute==10){
+    for (int64_t id : db.list_users()){
+      bot.getApi().sendMessage(id, curr_message);
+    }
+  }
+  std::this_thread::sleep_for(std::chrono::seconds(15));
 }

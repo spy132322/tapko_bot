@@ -10,7 +10,6 @@
 #include <vector>
 #include <memory>
 #include "SQL.h"
-bool stop_s = false;
 
 void check_tables(std::string &c);
 int get_aval_id(pqxx::work &tr);
@@ -216,7 +215,7 @@ namespace psql
                 return 0;
             }
             else
-            {   
+            {
                 tr.abort();
                 conn.close();
                 return 1;
@@ -288,106 +287,159 @@ namespace psql
             return 2;
         }
     }
-    int DB::SetWas(int id){
-        try{
+    int DB::SetWas(int id)
+    {
+        try
+        {
             pqxx::connection conn(c_info);
             pqxx::work tr{conn};
             if (check_if_exists(id, tr))
             {
-                tr.exec("UPDATE watchers SET isWas = TRUE WHERE id='"+std::to_string(id) + "';");
+                tr.exec("UPDATE watchers SET isWas = TRUE WHERE id='" + std::to_string(id) + "';");
                 tr.commit();
                 conn.close();
                 return 0;
             }
             else
-            {   
+            {
                 tr.abort();
                 conn.close();
                 return 1;
             }
-        }catch(std::exception &e){
+        }
+        catch (std::exception &e)
+        {
             std::cout << "[EE] Error when updating watcher " << e.what() << std::endl;
             return 2;
         }
     }
-    int DB::UnSetWas(int id){
-        try{
+    int DB::UnSetWas(int id)
+    {
+        try
+        {
             pqxx::connection conn(c_info);
             pqxx::work tr{conn};
             if (check_if_exists(id, tr))
             {
-                tr.exec("UPDATE watchers SET isWas = FALSE WHERE id='"+std::to_string(id) + "';");
+                tr.exec("UPDATE watchers SET isWas = FALSE WHERE id='" + std::to_string(id) + "';");
                 tr.commit();
                 conn.close();
                 return 0;
             }
             else
-            {   
+            {
                 tr.abort();
                 conn.close();
                 return 1;
             }
-        }catch(std::exception &e){
+        }
+        catch (std::exception &e)
+        {
             std::cout << "[EE] Error when updating watcher " << e.what() << std::endl;
             return 2;
         }
     }
-    int DB::Kill(int id){
-        try{
+    int DB::Kill(int id)
+    {
+        try
+        {
             pqxx::connection conn(c_info);
             pqxx::work tr{conn};
             if (check_if_exists(id, tr))
             {
-                tr.exec("UPDATE watchers SET isKilled = TRUE WHERE id='"+std::to_string(id) + "';");
+                tr.exec("UPDATE watchers SET isKilled = TRUE WHERE id='" + std::to_string(id) + "';");
                 tr.commit();
                 conn.close();
                 return 0;
             }
             else
-            {   
+            {
                 tr.abort();
                 conn.close();
                 return 1;
             }
-        }catch(std::exception &e){
+        }
+        catch (std::exception &e)
+        {
             std::cout << "[EE] Error when updating watcher " << e.what() << std::endl;
             return 2;
         }
     }
-    int DB::unKill(int id){
-        try{
+    int DB::unKill(int id)
+    {
+        try
+        {
             pqxx::connection conn(c_info);
             pqxx::work tr{conn};
             if (check_if_exists(id, tr))
             {
-                tr.exec("UPDATE watchers SET isKilled = FALSE WHERE id='"+std::to_string(id) + "';");
+                tr.exec("UPDATE watchers SET isKilled = FALSE WHERE id='" + std::to_string(id) + "';");
                 tr.commit();
                 conn.close();
                 return 0;
             }
             else
-            {   
+            {
                 tr.abort();
                 conn.close();
                 return 1;
             }
-        }catch(std::exception &e){
+        }
+        catch (std::exception &e)
+        {
             std::cout << "[EE] Error when updating watcher " << e.what() << std::endl;
             return 2;
         }
     }
-    void DB::clearall(){
-        try{
+    void DB::clearall()
+    {
+        try
+        {
             pqxx::connection conn(c_info);
             pqxx::work tr{conn};
             tr.exec("UPDATE watchers SET isWas = FALSE WHERE isWas=TRUE;");
             tr.commit();
             conn.close();
-        }catch(std::exception &e){
-            std::cout <<"[EE] Error reseting watchers " << e.what() << std::endl;
+        }
+        catch (std::exception &e)
+        {
+            std::cout << "[EE] Error reseting watchers " << e.what() << std::endl;
         }
     }
+    std::vector<int64_t> DB::list_users()
+    {
 
+        std::vector<int64_t> result;
+        try
+        {
+            
+            pqxx::connection conn(c_info);
+            pqxx::work tr{conn};
+            for (auto &[ids] : tr.query<int>(SQL::get_all_users))
+            {
+                result.push_back(ids);
+            }
+            if (result.empty())
+            {
+                result.clear();
+                tr.commit();
+                conn.close();
+                return result;
+            }
+            else
+            {
+                tr.commit();
+                conn.close();
+                return result;
+            }
+        }
+        catch (std::exception &e)
+        {
+            std::cout << "[EE] Error getting list of users with Autosend param " << e.what() << std::endl;
+            result.clear();
+            return result;
+        }
+    }
 };
 // Verify Tables
 void check_tables(std::string &c)
@@ -488,14 +540,14 @@ bool check_user_if_exists(int64_t &id, pqxx::connection &c)
     try
     {
 
-        bool result = tr.query_value<bool>("SELECT EXISTS (SELECT 1 FROM users WHERE id = '" + std::to_string(id) + "') AS name_exists;");
+        bool result = tr.query_value<bool>("SELECT EXISTS (SELECT 1 FROM users WHERE id ='" + std::to_string(id) + "') AS name_exists;");
 
         tr.commit();
         return result;
     }
     catch (std::exception &e)
     {
-        std::cout << "[EE] Unable to get existment status of user" << std::endl;
+        std::cout << "[EE] Unable to get existment status of user: " << e.what() << std::endl;
         tr.abort();
         return true;
     }

@@ -19,4 +19,7 @@ SELECT EXISTS (SELECT 1 FROM watchers);
     const char get_all_dates[]=R"(
 SELECT * FROM dates;
     )";
+    const char get_all_users[]=R"(
+SELECT * FROM users WHERE isAutosend=TRUE;
+)";
 };
