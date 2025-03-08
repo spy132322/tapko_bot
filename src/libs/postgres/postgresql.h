@@ -52,6 +52,10 @@ namespace psql
         int unKill(int id);
         // Сброс дежурства
         void clearall();
+        //Enable autosend
+        int enable(int64_t id);
+        //Disable autosend
+        int disable(int64_t id);
     };
 };
 

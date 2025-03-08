@@ -58,7 +58,7 @@ namespace psql
             std::cout << e.what() << std::endl;
         }
     }
-
+    
     // Проверка на админа user тг
     bool DB::check_admin(int64_t &id)
     {
@@ -261,6 +261,7 @@ namespace psql
             return result;
         }
     }
+    // Удалить Дату из бд
     int DB::del_date(std::string date)
     {
         try
@@ -287,6 +288,7 @@ namespace psql
             return 2;
         }
     }
+    // Set watcher WAS to TRUE
     int DB::SetWas(int id)
     {
         try
@@ -313,6 +315,7 @@ namespace psql
             return 2;
         }
     }
+    // Set watcher WAS to FALSE
     int DB::UnSetWas(int id)
     {
         try
@@ -339,6 +342,7 @@ namespace psql
             return 2;
         }
     }
+    // Set watcher kill to TRUE
     int DB::Kill(int id)
     {
         try
@@ -365,6 +369,7 @@ namespace psql
             return 2;
         }
     }
+    // Set watcher kill to FALSE
     int DB::unKill(int id)
     {
         try
@@ -391,6 +396,7 @@ namespace psql
             return 2;
         }
     }
+    // Set all watchers Was to FALSE
     void DB::clearall()
     {
         try
@@ -406,13 +412,14 @@ namespace psql
             std::cout << "[EE] Error reseting watchers " << e.what() << std::endl;
         }
     }
+    // list users with enables autosend
     std::vector<int64_t> DB::list_users()
     {
 
         std::vector<int64_t> result;
         try
         {
-            
+
             pqxx::connection conn(c_info);
             pqxx::work tr{conn};
             for (auto &[ids] : tr.query<int>(SQL::get_all_users))
@@ -438,6 +445,60 @@ namespace psql
             std::cout << "[EE] Error getting list of users with Autosend param " << e.what() << std::endl;
             result.clear();
             return result;
+        }
+    }
+    // Включить автоотправку
+    int DB::enable(int64_t id)
+    {
+        try
+        {
+            pqxx::connection conn(c_info);
+            
+            if (check_user_if_exists(id, conn))
+            {
+                pqxx::work tr{conn};
+                tr.exec("UPDATE users SET isAutosend = TRUE WHERE id='" + std::to_string(id) + "';");
+                tr.commit();
+                conn.close();
+                return 0;
+            }
+            else
+            {
+                conn.close();
+                return 1;
+            }
+        }
+        catch (std::exception &e)
+        {
+            std::cout << "[EE] Error when updating user " << e.what() << std::endl;
+            return 2;
+        }
+    }
+    // Выключить автоотправку
+    int DB::disable(int64_t id)
+    {
+        try
+        {
+            pqxx::connection conn(c_info);
+            
+            if (check_user_if_exists(id, conn))
+            {
+                pqxx::work tr{conn};
+                tr.exec("UPDATE users SET isAutosend = FALSE WHERE id='" + std::to_string(id) + "';");
+                tr.commit();
+                conn.close();
+                return 0;
+            }
+            else
+            {
+                conn.close();
+                return 1;
+            }
+        }
+        catch (std::exception &e)
+        {
+            std::cout << "[EE] Error when updating user " << e.what() << std::endl;
+            return 2;
         }
     }
 };
