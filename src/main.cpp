@@ -29,7 +29,7 @@ void autosender();
 std::string bot_key = std::getenv("TGBOT_KEY");
 // Текущее сообщение о дежурстве
 std::string curr_message = "🚨 Дежурных нет. Слишком мало для создания списка дежурных.";
-int guys = 0;
+int guys = std::stoi(std::getenv("GUYS"));
 struct wch
 {
   std::vector<int> ids;
@@ -180,7 +180,6 @@ ID  |      Имя       | Статус)");
                               {
                                 message_to = message_to + strm + "\n";
                               }
-                              std::cout << message_to << std::endl;
                               bot.getApi().sendMessage(message->chat->id, message_to, nullptr, nullptr, nullptr, "markdown"); });
   // Удаление дежурного из БД
   bot.getEvents().onCommand("del", [&bot](TgBot::Message::Ptr message)
@@ -617,7 +616,6 @@ void UpdateWatchers()
   clearifend();
   if (db.list().size() > guys)
   {
-
     int alive = 0;
     for (auto &Guy : db.list())
     {
