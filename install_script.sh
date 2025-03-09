@@ -1,6 +1,4 @@
 #!/bin/sh
-
-# !!! ЗАПУСКАТЬ НЕ НА ХОСТЕ !!!
 apt update
 apt upgrade -y
 apt update && apt install -y locales && \
@@ -8,22 +6,21 @@ apt update && apt install -y locales && \
     locale-gen ru_RU.UTF-8 && \
     update-locale LANG=en_US.UTF-8
 apt install -y build-essential g++ make binutils cmake libboost-system-dev libssl-dev zlib1g-dev libcurl4-openssl-dev cmake git libpq-dev postgresql-server-dev-all libboost-dev libssl-dev pkg-config libgtest-dev libgmock-dev doxygen
-cd /
+cd ..
 git clone https://github.com/reo7sp/tgbot-cpp
 cd /tgbot-cpp
 cmake .
 make -j4
-make install
-cd /
+sudo make install
+cd ..
 git clone https://github.com/jtv/libpqxx.git /libpqxx
-cd /libpqxx
+cd libpqxx
 cmake .
 cmake --build .
-cmake --install .
-cd /tapko_bot
+sudo cmake --install .
+cd ..
 cmake .
 make
-make install
+sudo make install
 cd /
-
 

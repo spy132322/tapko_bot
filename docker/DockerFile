@@ -1,8 +1,0 @@
-FROM debian:bookworm
-ADD ../src /tapko_bot
-ADD install_prereq.sh /install_prereq.sh
-RUN sh /install_prereq.sh
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
-CMD ["/usr/bin/main"]

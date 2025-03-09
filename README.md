@@ -43,22 +43,18 @@
 
 ### Требования
 
-1. Установленные **Docker** и **Docker Compose**.
+1. Установленные либы **pqxx (7.10.0) ; TgBot-cpp(1.9)** .
 2. Установленный **Git**.
+3. Сервер **Postgresql**.
 
 ---
 
 ### Установка
 
-#### Шаг 1: Клонирование репозитория
-
-Клонируйте репозиторий на ваш компьютер:
-
 ```bash
 git clone https://github.com/spy132322/tapko_bot.git
-cd tapko_bot/docker
-docker compose build
-docker compose up -d
+cd tapko_bot
+
 ```
 ## License
 [MIT license](LICENSE)
