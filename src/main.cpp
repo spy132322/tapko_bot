@@ -101,7 +101,7 @@ int main()
                               } });
   bot.getEvents().onCommand("help", [&bot](TgBot::Message::Ptr message)
                             {
-                                std::cout << "[II] " + message->chat->id << " has used help command" << std::endl;
+                                std::cout << "[II] " << message->chat->id << " has used help command" << std::endl;
                                 if (db.check_admin(message->chat->id)){
                                   bot.getApi().sendMessage(message->chat->id, messages::help_admin,nullptr,nullptr,nullptr,"markdown");
                                 }
@@ -109,6 +109,7 @@ int main()
                                 {
                                   bot.getApi().sendMessage(message->chat->id, messages::help_users,nullptr,nullptr,nullptr,"markdown");
                                 } });
+
   // Включить автоотправку
   bot.getEvents().onCommand("enable", [&bot](TgBot::Message::Ptr message)
                             {
