@@ -177,6 +177,7 @@ ID |    Имя    | Состояние
                                     list.push_back(std::to_string(Guy.id) + name + " 🟢 (Доступен)  | Было дежурство: ❌");
                                   }
                                 }
+                                list.push_back("```");
                                 
                               }
                               else
@@ -188,7 +189,7 @@ ID |    Имя    | Состояние
                               {
                                 message_to = message_to + strm + "\n";
                               }
-                              bot.getApi().sendMessage(message->chat->id, message_to); });
+                              bot.getApi().sendMessage(message->chat->id, message_to, nullptr, nullptr, nullptr, "markdown"); });
   // Удаление дежурного из БД
   bot.getEvents().onCommand("del", [&bot](TgBot::Message::Ptr message)
                             {
