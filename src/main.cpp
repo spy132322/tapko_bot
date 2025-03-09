@@ -156,7 +156,7 @@ ID |    Имя    | Состояние
                                 {
                                   std::string name = Guy.Name;
                                   std::string id = std::to_string(Guy.id);
-                                  while(name.size() =< 11){
+                                  while(name.size() <= 11){
                                     if(name.size() < 11){
                                       name = name + " ";
                                     }else{
