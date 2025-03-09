@@ -154,12 +154,12 @@ ID  |    Имя    | Состояние
                               {
                                 for (auto &Guy : db.list())
                                 {
-                                  std::string name = Guy.Name;
+                                  
+                                  std::string name[11] = Guy.Name;
                                   std::string id = std::to_string(Guy.id);
                                   while (id.size() < 3) {
                                     id += " ";
                                 }
-                                  name.resize(11, ' ');
                                   std::string status;
                                   if (Guy.isKilled) {
                                       status = "🔴 (Не доступен)";
