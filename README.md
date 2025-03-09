@@ -63,5 +63,21 @@ quit;
 ```bash
 systemctl enable --now tapko_bot
 ```
+## Конфиг
+```env
+# БД
+DB_HOST=127.0.0.1
+DB_PASSWORD=<DB_PASSWORD> 
+DB_PORT=5432
+DB_USER=tapok
+DB_NAME=tapok_bot
+# Ключ бота от ТГ
+TGBOT_KEY=<TGBOT_API_KEY> 
+# Время автоотправки
+AUTO_HOUR="10"
+AUTO_MINUTE="10"
+# Кол-во людей в дежурной группе
+GUYS=2
+```
 ## License
 [MIT license](LICENSE)
