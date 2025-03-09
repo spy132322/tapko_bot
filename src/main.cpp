@@ -27,8 +27,6 @@ void clearifend();
 void autosender();
 
 std::string bot_key = std::getenv("TGBOT_KEY");
-int ahour = std::stoi(std::getenv("AUTO_HOUR"));
-int aminute = std::stoi(std::getenv("AUTO_MINUTE"));
 // Текущее сообщение о дежурстве
 std::string curr_message = "🚨 Дежурных нет. Слишком мало для создания списка дежурных.";
 int guys = 0;
@@ -814,7 +812,14 @@ void sigterm(int signal)
 // Авто отправлялка
 void autosender()
 {
-
+  int aminute = 0;
+  int ahour = 0;
+  if(std::getenv("AUTO_HOUR") and std::getenv("AUTO_MINUTE")){
+  ahour = std::stoi(std::getenv("AUTO_HOUR"));
+  aminute = std::stoi(std::getenv("AUTO_MINUTE"));
+  }else{
+    exit(-1);
+  }
   TgBot::Bot bot(bot_key);
   std::cout << "[II] Starting autosend thread" << std::endl;
   while (!stop)
