@@ -49,6 +49,17 @@ git clone https://github.com/spy132322/tapko_bot.git
 cd tapko_bot
 sudo sh ./install_script.sh
 ```
-
+```bash
+sudo -u postgres psql 
+```
+```SQL
+CREATE USER tapok;
+ALTER USER tapok WITH PASSWORD '<DB_PASSWORD>';
+CREATE DATABASE tapok_bot WITH OWNER tapok;
+quit;
+```
+```bash
+systemctl enable --now tapko_bot
+```
 ## License
 [MIT license](LICENSE)
