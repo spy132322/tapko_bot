@@ -20,8 +20,6 @@ cd /libpqxx
 cmake .
 cmake --build .
 cmake --install .
-cd /
-git clone https://github.com/spy132322/tapko_bot.git
 cd /tapko_bot
 cmake .
 make

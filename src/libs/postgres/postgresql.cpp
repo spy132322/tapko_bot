@@ -29,6 +29,7 @@ namespace psql
                  " password=" + params[2] +
                  " port=" + params[3] +
                  " host=" + params[4];
+        std::cout << c_info << std::endl;
         check_tables(c_info);
         } else{
             std::cout << "[EE] Error initilizing DB: Not enough variables." << std::endl;
