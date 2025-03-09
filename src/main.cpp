@@ -152,7 +152,9 @@ int main()
                                 for (auto &Guy : db.list())
                                 {
                                   std::string name = Guy.Name;
-                                  name.resize(size_t(11), ' ');
+                                  while(name.size() < 12){
+                                    name = name + ' ';
+                                  }
                                   if (Guy.isKilled)
                                   {
                                     list.push_back(std::to_string(Guy.id) + ". " + name + " 🔴 (Не доступен)");
