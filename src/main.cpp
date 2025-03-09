@@ -146,26 +146,33 @@ int main()
                             {
                               std::cout << "[II] " << message->chat->firstName << " has used list command" << std::endl; 
                               std::vector<std::string> list;
-                              list.push_back("📋 Список дежурных:\n ID |      Имя      | Состояние");
+                              list.push_back(R"(📋 Список дежурных:
+```
+ID |    Имя    | Состояние
+                                )");
                               if (db.list()[0].Name != "Список пуст")
                               {
                                 for (auto &Guy : db.list())
                                 {
                                   std::string name = Guy.Name;
-                                  while(name.size() < 15){
+                                  std::string id = std::to_string(Guy.id);
+                                  while(name.size() < 11){
+                                    name = name + " ";
+                                  }
+                                  while(id.size() < 3){
                                     name = name + " ";
                                   }
                                   if (Guy.isKilled)
                                   {
-                                    list.push_back(std::to_string(Guy.id) + ". " + name + " 🔴 (Не доступен)");
+                                    list.push_back(std::to_string(Guy.id) + "|" + name + "| 🔴 (Не доступен)");
                                   }
                                   if (Guy.isWas and !Guy.isKilled)
                                   {
-                                    list.push_back(std::to_string(Guy.id) + ". " + name + " 🟢 (Доступен)  | Было дежурство: ✅");
+                                    list.push_back(std::to_string(Guy.id) + "|" + name + "| 🟢 (Доступен)  | Было дежурство: ✅");
                                   }
                                   if (!Guy.isKilled and !Guy.isWas)
                                   {
-                                    list.push_back(std::to_string(Guy.id) + ". " + name + " 🟢 (Доступен)  | Было дежурство: ❌");
+                                    list.push_back(std::to_string(Guy.id) + "|" + name + "| 🟢 (Доступен)  | Было дежурство: ❌");
                                   }
                                 }
                                 
