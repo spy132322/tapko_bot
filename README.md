@@ -49,6 +49,8 @@ git clone --recurse-submodules https://github.com/spy132322/tapko_bot.git
 cd tapko_bot
 sudo sh ./install_script.sh
 ```
+Конфигурационный файл редактируем под себя:
+`/etc/tapko_bot/tapko_bot.conf`
 ```bash
 sudo -u postgres psql 
 ```
