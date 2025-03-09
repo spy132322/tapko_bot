@@ -730,7 +730,6 @@ void UpdateMessage()
   else
   {
     curr_message = "🚨 Текущие дежурные на сегодня:\n";
-    std::cout << db.list().size() << std::endl;
     for (std::string a : current_watchers.names)
     {
       curr_message = curr_message + a + "\n";
