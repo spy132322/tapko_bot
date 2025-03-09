@@ -67,7 +67,7 @@ int main()
                             {
                               if (db.check_admin(message->chat->id))
                               {
-                                std::cout << "[II] " << message->chat->username << " has used add command " + message->text << std::endl;
+                                std::cout << "[II] " << message->chat->id << " has used add command " + message->text << std::endl;
                                 if (message->text.size() > 4 and is_safe_input(message->text.substr(5)))
                                 {
                                   std::string setting = message->text.substr(5);
@@ -91,7 +91,7 @@ int main()
                                 }
                                 else
                                 {
-                                  std::cout << "[WW] " << message->chat->username << " Tried to use SQL injection" << std::endl;
+                                  std::cout << "[WW] " << message->chat->id << " Tried to use SQL injection" << std::endl;
                                   bot.getApi().sendMessage(message->chat->id, "Nice try. Hah)");
                                 }
                               }
@@ -101,7 +101,7 @@ int main()
                               } });
   bot.getEvents().onCommand("help", [&bot](TgBot::Message::Ptr message)
                             {
-                                std::cout << "[II] " + message->chat->username + " has used help command" << std::endl;
+                                std::cout << "[II] " + message->chat->id << " has used help command" << std::endl;
                                 if (db.check_admin(message->chat->id)){
                                   bot.getApi().sendMessage(message->chat->id, messages::help_admin,nullptr,nullptr,nullptr,"markdown");
                                 }
@@ -113,7 +113,7 @@ int main()
   bot.getEvents().onCommand("enable", [&bot](TgBot::Message::Ptr message)
                             {
                                 int result = db.enable(message->chat->id);
-                                std::cout << "[II] " << message->chat->username << " has used enable command " + message->text << std::endl;
+                                std::cout << "[II] " << message->chat->id << " has used enable command " + message->text << std::endl;
                                 switch (result){
                                   case 0:
                                     bot.getApi().sendMessage(message->chat->id, "Автоотправка успешно включена.");
@@ -129,7 +129,7 @@ int main()
   bot.getEvents().onCommand("disable", [&bot](TgBot::Message::Ptr message)
                             {
                                 int result = db.enable(message->chat->id);
-                                std::cout << "[II] " << message->chat->username << " has used disable command " + message->text << std::endl;
+                                std::cout << "[II] " << message->chat->id << " has used disable command " + message->text << std::endl;
                                 switch (result){
                                   case 0:
                                     bot.getApi().sendMessage(message->chat->id, "Автоотправка успешно выключена.");
@@ -144,7 +144,7 @@ int main()
   // Список Дежурных
   bot.getEvents().onCommand("list", [&bot](TgBot::Message::Ptr message)
                             {
-                              std::cout << "[II] " << message->chat->firstName << " has used list command" << std::endl; 
+                              std::cout << "[II] " << message->chat->id << " has used list command" << std::endl; 
                               std::vector<std::string> list;
                               list.push_back(R"(📋 Список дежурных:
 ```
@@ -186,7 +186,7 @@ ID  |      Имя       | Статус)");
                             {
                               if (db.check_admin(message->chat->id))
                               {
-                                std::cout << "[II] " << message->chat->username << " has used add command " + message->text << std::endl;
+                                std::cout << "[II] " << message->chat->id << " has used add command " + message->text << std::endl;
                                 if (message->text.size() > 5 and isInterger(message->text.substr(5)))
                                 {
 
@@ -222,7 +222,7 @@ ID  |      Имя       | Статус)");
                             {
                               if (db.check_admin(message->chat->id))
                               {
-                                std::cout << "[II] " << message->chat->username << " has used add_date command " + message->text << std::endl;
+                                std::cout << "[II] " << message->chat->id << " has used add_date command " + message->text << std::endl;
                                 if (message->text.size() > 10 and isDate(message->text.substr(10)))
                                 {
                                   std::string setting = message->text.substr(10);
@@ -256,7 +256,7 @@ ID  |      Имя       | Статус)");
   // List dates
   bot.getEvents().onCommand("list_dates", [&bot](TgBot::Message::Ptr message)
                             {
-                              std::cout << "[II] " << message->chat->firstName << " has used list_date command" << std::endl; 
+                              std::cout << "[II] " << message->chat->id << " has used list_date command" << std::endl; 
                               std::vector<std::string> list;
                               list.push_back("📋 Список исключенных дат:");
                               if (db.list_dates()[0] != "LIE" and db.list_dates()[0] != "EE")
@@ -284,7 +284,7 @@ ID  |      Имя       | Статус)");
                             {
                                 if (db.check_admin(message->chat->id))
                                 {
-                                  std::cout << "[II] " << message->chat->username << " has used del_date command " + message->text << std::endl;
+                                  std::cout << "[II] " << message->chat->id << " has used del_date command " + message->text << std::endl;
                                   if (message->text.size() > 10 and isDate(message->text.substr(10)))
                                   {
                                     std::string setting = message->text.substr(10);
@@ -358,7 +358,7 @@ ID  |      Имя       | Статус)");
                             {
                                   if (db.check_admin(message->chat->id))
                                   {
-                                    std::cout << "[II] " << message->chat->username << " has used kill command " + message->text << std::endl;
+                                    std::cout << "[II] " << message->chat->id << " has used kill command " + message->text << std::endl;
                                     if (message->text.size() > 6 and isInterger(message->text.substr(6)))
                                     {
     
@@ -394,7 +394,7 @@ ID  |      Имя       | Статус)");
                             {
                                     if (db.check_admin(message->chat->id))
                                     {
-                                      std::cout << "[II] " << message->chat->username << " has used unkill command " + message->text << std::endl;
+                                      std::cout << "[II] " << message->chat->id << " has used unkill command " + message->text << std::endl;
                                       if (message->text.size() > 7 and isInterger(message->text.substr(7)))
                                       {
       
@@ -430,7 +430,7 @@ ID  |      Имя       | Статус)");
                             {
                                       if (db.check_admin(message->chat->id))
                                       {
-                                        std::cout << "[II] " << message->chat->username << " has used unset command " + message->text << std::endl;
+                                        std::cout << "[II] " << message->chat->id << " has used unset command " + message->text << std::endl;
                                         if (message->text.size() > 5 and isInterger(message->text.substr(5)))
                                         {
         
@@ -466,7 +466,7 @@ ID  |      Имя       | Статус)");
                             {
                                         if (db.check_admin(message->chat->id))
                                         {
-                                          std::cout << "[II] " << message->chat->username << " has used unset command " + message->text << std::endl;
+                                          std::cout << "[II] " << message->chat->id << " has used unset command " + message->text << std::endl;
                                           if (message->text.size() > 7 and isInterger(message->text.substr(7)))
                                           {
           
