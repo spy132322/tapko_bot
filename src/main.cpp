@@ -156,10 +156,13 @@ ID |    Имя    | Состояние
                                 {
                                   std::string name = Guy.Name;
                                   std::string id = std::to_string(Guy.id);
-                                  while(name.size() < 11){
-                                    name = name + " ";
+                                  while(name.size() =< 11){
+                                    if(name.size() < 11){
+                                      name = name + " ";
+                                    }else{
+                                      name = name + "|";
+                                    }
                                   }
-                                  name = name + "|";
                                   while(id.size() < 3){
                                     id = id + " ";
                                   }
@@ -730,7 +733,7 @@ void clearifend()
 // обновление сообщения
 void UpdateMessage()
 {
-  
+
   if (db.list()[0].Name == "Список пуст")
   {
     curr_message = "🚨 Дежурных нет. Слишком мало для создания списка дежурных.";
@@ -828,10 +831,13 @@ void autosender()
 {
   int aminute = 0;
   int ahour = 0;
-  if(std::getenv("AUTO_HOUR") and std::getenv("AUTO_MINUTE")){
-  ahour = std::stoi(std::getenv("AUTO_HOUR"));
-  aminute = std::stoi(std::getenv("AUTO_MINUTE"));
-  }else{
+  if (std::getenv("AUTO_HOUR") and std::getenv("AUTO_MINUTE"))
+  {
+    ahour = std::stoi(std::getenv("AUTO_HOUR"));
+    aminute = std::stoi(std::getenv("AUTO_MINUTE"));
+  }
+  else
+  {
     exit(-1);
   }
   TgBot::Bot bot(bot_key);
