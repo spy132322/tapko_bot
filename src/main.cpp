@@ -154,21 +154,6 @@ ID  |      Имя      | Состояние
                               {
                                 for (auto &Guy : db.list())
                                 {
-                                  char name[16]; 
-                                  std::string nameStr = Guy.Name;      
-                                  
-                                  if (nameStr.length() < 15) {
-                                      strncpy(name, nameStr.c_str(), nameStr.length());                        
-                                      for (size_t i = nameStr.length(); i < 15; ++i) {
-                                          name[i] = ' ';
-                                      }
-                                      name[15] = '\0';  
-                                  }      
-                                  else {
-                                      strncpy(name, nameStr.c_str(), 15);
-                                      name[15] = '\0'; 
-                                  }                                 
-                                  
                                   std::string id = std::to_string(Guy.id);
                                   while (id.size() < 3) {
                                     id += " ";
@@ -181,7 +166,8 @@ ID  |      Имя      | Состояние
                                   } else {
                                       status = "🟢 (Доступен)  | Дежурил/а: ❌";
                                   }
-                                  list.push_back(id + " | " + name + " | " + status);
+                                  list.push_back(id + " | " + Guy.Name);
+                                  list.push_back("      " + status);
                                 }
                                 list.push_back("```");
                                 
