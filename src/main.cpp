@@ -166,8 +166,8 @@ ID  |      Имя      | Состояние
                                   } else {
                                       status = "🟢 (Доступен)  | Дежурил/а: ❌";
                                   }
-                                  list.push_back(id + " | " + Guy.Name+"\n");
-                                  list.push_back("      " + status+"\n");
+                                  list.push_back(id + " | " + Guy.Name);
+                                  list.push_back("      " + status);
                                 }
                                 list.push_back("```");
                                 
