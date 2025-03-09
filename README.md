@@ -45,7 +45,7 @@
 
 ### Как установить
 ```bash
-git clone https://github.com/spy132322/tapko_bot.git
+git clone --recurse-submodules https://github.com/spy132322/tapko_bot.git
 cd tapko_bot
 sudo sh ./install_script.sh
 ```
