@@ -195,6 +195,7 @@ ID  |      Имя      | Состояние
                               {
                                 message_to = message_to + strm + "\n";
                               }
+                              std::cout << message_to << std::endl;
                               bot.getApi().sendMessage(message->chat->id, message_to, nullptr, nullptr, nullptr, "markdown"); });
   // Удаление дежурного из БД
   bot.getEvents().onCommand("del", [&bot](TgBot::Message::Ptr message)
