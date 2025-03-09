@@ -3,6 +3,7 @@ Description=Telegram tapko bot
 After=network.target
 Documentation="https://github.com/spy132322/tapko_bot.git"
 [Service]
+Restart=always
 ExecStart=/bin/bash -c "/usr/bin/tapok_bot"
 EnvironmentFile=/etc/tapko_bot/tapko_bot.conf
 ExecStop=/bin/kill -KILL $MAINPID
