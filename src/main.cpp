@@ -156,29 +156,22 @@ ID |    Имя    | Состояние
                                 {
                                   std::string name = Guy.Name;
                                   std::string id = std::to_string(Guy.id);
-                                  while(name.size() <= 11){
-                                    if(name.size() < 11){
-                                      name = name + " ";
-                                    }else{
-                                      name = name + "|";
-                                    }
-                                  }
-                                  while(id.size() < 3){
-                                    id = id + " ";
-                                  }
+                                  while (id.size() < 3) {
+                                    id += " ";
+                                }
+                                while (name.size() < 11) {
+                                    name += " ";
+                                }
                                   id = id + "|";
-                                  if (Guy.isKilled)
-                                  {
-                                    list.push_back(id + name + " 🔴 (Не доступен)");
+                                  std::string status;
+                                  if (Guy.isKilled) {
+                                      status = "🔴 (Не доступен)";
+                                  } else if (Guy.isWas) {
+                                      status = "🟢 (Доступен)  | Было дежурство: ✅";
+                                  } else {
+                                      status = "🟢 (Доступен)  | Было дежурство: ❌";
                                   }
-                                  if (Guy.isWas and !Guy.isKilled)
-                                  {
-                                    list.push_back(id + name + " 🟢 (Доступен)  | Было дежурство: ✅");
-                                  }
-                                  if (!Guy.isKilled and !Guy.isWas)
-                                  {
-                                    list.push_back(id + name + " 🟢 (Доступен)  | Было дежурство: ❌");
-                                  }
+                                  list.push_back(id + " | " + name + " | " + status);
                                 }
                                 list.push_back("```");
                                 
