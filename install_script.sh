@@ -22,5 +22,6 @@ cd ..
 cmake .
 make
 sudo make install
+sudo cp start.sh /usr/bin/start_bot.sh
 cd /
 
