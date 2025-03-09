@@ -159,20 +159,22 @@ ID |    Имя    | Состояние
                                   while(name.size() < 11){
                                     name = name + " ";
                                   }
+                                  name = name + "|";
                                   while(id.size() < 3){
                                     id = id + " ";
                                   }
+                                  id = id + "|";
                                   if (Guy.isKilled)
                                   {
-                                    list.push_back(std::to_string(Guy.id) + "|" + name + "| 🔴 (Не доступен)");
+                                    list.push_back(std::to_string(Guy.id) + name + " 🔴 (Не доступен)");
                                   }
                                   if (Guy.isWas and !Guy.isKilled)
                                   {
-                                    list.push_back(std::to_string(Guy.id) + "|" + name + "| 🟢 (Доступен)  | Было дежурство: ✅");
+                                    list.push_back(std::to_string(Guy.id) + name + " 🟢 (Доступен)  | Было дежурство: ✅");
                                   }
                                   if (!Guy.isKilled and !Guy.isWas)
                                   {
-                                    list.push_back(std::to_string(Guy.id) + "|" + name + "| 🟢 (Доступен)  | Было дежурство: ❌");
+                                    list.push_back(std::to_string(Guy.id) + name + " 🟢 (Доступен)  | Было дежурство: ❌");
                                   }
                                 }
                                 
