@@ -20,5 +20,7 @@ cmake .
 make
 sudo make install
 sudo cp tapko_bot.service /lib/systemd/system
-sudo cp --parents env.conf /etc/tapko_bot/tapko_bot.conf
+mkdir /etc/tapko_bot
+sudo cp env.conf /etc/tapko_bot/tapko_bot.conf
+sudo systemctl daemon-reload
 
