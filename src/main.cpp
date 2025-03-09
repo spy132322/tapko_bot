@@ -54,8 +54,6 @@ time_s Time;
 bool get_curr_time();
 int main()
 {
-  // Импортируем ключ бота
-
   // Инит Ботинка
   TgBot::Bot bot(bot_key);
   // Иннит комманд
