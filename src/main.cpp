@@ -148,7 +148,7 @@ int main()
                               std::vector<std::string> list;
                               list.push_back(R"(📋 Список дежурных:
 ```
-ID  |      Имя      | Состояние)");
+ID  |      Имя       | Статус)");
                               if (db.list()[0].Name != "Список пуст")
                               {
                                 for (auto &Guy : db.list())
