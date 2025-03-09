@@ -146,11 +146,14 @@ int main()
                             {
                               std::cout << "[II] " << message->chat->firstName << " has used list command" << std::endl; 
                               std::vector<std::string> list;
-                              list.push_back("📋 Список дежурных:");
+                              list.push_back(R"(📋 Список дежурных:\n
+                                ID |    Имя    | Состояние
+                                )");
                               if (db.list()[0].Name != "Список пуст")
                               {
                                 for (auto &Guy : db.list())
                                 {
+                                  Guy.Name.resize(size_t(11),' ');
                                   if (Guy.isKilled)
                                   {
                                     list.push_back(std::to_string(Guy.id) + ". " + Guy.Name + " 🔴 (Не доступен)");
