@@ -148,7 +148,7 @@ int main()
                               std::vector<std::string> list;
                               list.push_back(R"(📋 Список дежурных:
 ```
-ID |    Имя    | Состояние
+ID  |    Имя    | Состояние
                                 )");
                               if (db.list()[0].Name != "Список пуст")
                               {
@@ -159,9 +159,7 @@ ID |    Имя    | Состояние
                                   while (id.size() < 3) {
                                     id += " ";
                                 }
-                                while (name.size() < 11) {
-                                    name += " ";
-                                }
+                                  int co = 11-name.size();
                                   std::string status;
                                   if (Guy.isKilled) {
                                       status = "🔴 (Не доступен)";
