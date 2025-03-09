@@ -148,18 +148,31 @@ int main()
                               std::vector<std::string> list;
                               list.push_back(R"(📋 Список дежурных:
 ```
-ID  |    Имя    | Состояние
+ID  |      Имя      | Состояние
                                 )");
                               if (db.list()[0].Name != "Список пуст")
                               {
                                 for (auto &Guy : db.list())
                                 {
+                                  char name[16]; 
+                                  std::string nameStr = Guy.Name;      
                                   
-                                  std::string name[11] = Guy.Name;
+                                  if (nameStr.length() < 15) {
+                                      strncpy(name, nameStr.c_str(), nameStr.length());                        
+                                      for (size_t i = nameStr.length(); i < 15; ++i) {
+                                          name[i] = ' ';
+                                      }
+                                      name[15] = '\0';  
+                                  }      
+                                  else {
+                                      strncpy(name, nameStr.c_str(), 15);
+                                      name[15] = '\0'; 
+                                  }                                 
+                                  
                                   std::string id = std::to_string(Guy.id);
                                   while (id.size() < 3) {
                                     id += " ";
-                                }
+                                  }
                                   std::string status;
                                   if (Guy.isKilled) {
                                       status = "🔴 (Не доступен)";
