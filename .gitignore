@@ -38,4 +38,3 @@ build
 data
 *.sql
 .vscode
-docker
