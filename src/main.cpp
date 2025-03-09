@@ -160,7 +160,7 @@ ID |    Имя    | Состояние
                                     name = name + " ";
                                   }
                                   while(id.size() < 3){
-                                    name = name + " ";
+                                    id = id + " ";
                                   }
                                   if (Guy.isKilled)
                                   {
