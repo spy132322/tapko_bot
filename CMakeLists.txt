@@ -18,10 +18,10 @@ set(SOURCES
     src/libs/postgres/postgresql.cpp
 )
 
-add_executable(main ${SOURCES})
+add_executable(tapok_bot ${SOURCES})
 
 
-target_link_libraries(main
+target_link_libraries(tapok_bot
     pqxx
     pq
     TgBot
@@ -30,4 +30,4 @@ target_link_libraries(main
     OpenSSL::Crypto
     Threads::Threads
 )
-install(TARGETS main DESTINATION /usr/bin)
+install(TARGETS tapok_bot DESTINATION /usr/bin)

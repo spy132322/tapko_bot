@@ -34,27 +34,22 @@
 9. `/skip` - Пропустить дежурящую группу, без отметки о том что они дежурили.
 10. `/pass` - Пропустить дежурящую группу, с отметкой о том что они дежурили.
 
-## How to
-## Tapko Bot: Telegram-бот для управления дежурствами
+## Установка
 
-Это Telegram-бот для управления расписанием дежурств. Он использует PostgreSQL для хранения данных и запускается в Docker-контейнерах.
-
----
 
 ### Требования
 
 1. Установленные либы **pqxx (7.10.0) ; TgBot-cpp(1.9)** .
 2. Установленный **Git**.
-3. Сервер **Postgresql**.
+3. Сервер **Postgresql 17.4**.
 
----
-
-### Установка
-
+### Как установить
 ```bash
 git clone https://github.com/spy132322/tapko_bot.git
 cd tapko_bot
-
+sudo sh ./install_script.sh
+cp start.sh /usr/bin/start_bot.sh
 ```
+
 ## License
 [MIT license](LICENSE)
