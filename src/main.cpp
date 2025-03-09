@@ -151,18 +151,19 @@ int main()
                               {
                                 for (auto &Guy : db.list())
                                 {
-                                  Guy.Name.resize(size_t(11),' ');
+                                  std::string name = Guy.Name;
+                                  name.resize(size_t(11), ' ');
                                   if (Guy.isKilled)
                                   {
-                                    list.push_back(std::to_string(Guy.id) + ". " + Guy.Name + " 🔴 (Не доступен)");
+                                    list.push_back(std::to_string(Guy.id) + ". " + name + " 🔴 (Не доступен)");
                                   }
                                   if (Guy.isWas and !Guy.isKilled)
                                   {
-                                    list.push_back(std::to_string(Guy.id) + ". " + Guy.Name + " 🟢 (Доступен)  | Было дежурство: ✅");
+                                    list.push_back(std::to_string(Guy.id) + ". " + name + " 🟢 (Доступен)  | Было дежурство: ✅");
                                   }
                                   if (!Guy.isKilled and !Guy.isWas)
                                   {
-                                    list.push_back(std::to_string(Guy.id) + ". " + Guy.Name + " 🟢 (Доступен)  | Было дежурство: ❌");
+                                    list.push_back(std::to_string(Guy.id) + ". " + name + " 🟢 (Доступен)  | Было дежурство: ❌");
                                   }
                                 }
                                 
