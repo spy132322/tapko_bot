@@ -159,7 +159,7 @@ ID  |    Имя    | Состояние
                                   while (id.size() < 3) {
                                     id += " ";
                                 }
-                                  int co = 11-name.size();
+                                  name.resize(11, ' ');
                                   std::string status;
                                   if (Guy.isKilled) {
                                       status = "🔴 (Не доступен)";
