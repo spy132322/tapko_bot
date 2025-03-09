@@ -22,6 +22,6 @@ cd ..
 cmake .
 make
 sudo make install
-sudo cp start.sh /usr/bin/start_bot.sh
-cd /
+sudo cp tapko_bot.service /lib/systemd/system
+sudo cp env.conf /etc/tapko_bot/tapko_bot.conf
 

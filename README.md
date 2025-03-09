@@ -48,7 +48,6 @@
 git clone https://github.com/spy132322/tapko_bot.git
 cd tapko_bot
 sudo sh ./install_script.sh
-cp start.sh /usr/bin/start_bot.sh
 ```
 
 ## License
