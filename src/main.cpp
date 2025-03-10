@@ -696,6 +696,7 @@ void UpdateWatchers()
         }
       }
     }
+    if(!current_watchers.ids.empty()){
     if (!skip)
     {
       noSkip();
@@ -705,7 +706,11 @@ void UpdateWatchers()
       Skip();
     }
     skip = false;
+    
     UpdateMessage();
+    } else{
+      UpdateWatchers();
+    }
   }
 }
 void clearifend()
