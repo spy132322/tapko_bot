@@ -607,6 +607,7 @@ void Updater()
     {
       std::cout << "[II] Automatic update watchers started" << std::endl;
       UpdateWatchers();
+      std::this_thread::sleep_for(std::chrono::hours(1));
     }
     std::this_thread::sleep_for(std::chrono::minutes(30));
   }
